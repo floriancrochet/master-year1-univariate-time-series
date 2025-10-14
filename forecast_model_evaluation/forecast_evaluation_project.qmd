@@ -1,0 +1,635 @@
+---
+format: 
+  pdf:
+    documentclass: article
+    classoption: ["a4paper", "12pt", "fleqn"]
+    geometry: top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm
+    number-sections: true
+    number-depth: 3
+    toc: false
+header-includes: |
+  \usepackage[french]{babel}  % Pour afficher la date en français
+  \usepackage{hyperref}  % Liens cliquables
+  \hypersetup{hidelinks}  % Désactive complètement la mise en couleur des liens
+editor: 
+  markdown: 
+    wrap: 72
+---
+
+
+\begin{titlepage}
+    \vspace*{\fill}
+    \begin{center}
+        {\LARGE \textbf{Séries temporelles univariées}}\\
+        \vspace{0.5cm}
+        {\Large \textbf{TD5 : Évaluation de modèles de prévision}}\\
+        \vspace{0.75cm}
+        {\large \textbf{HOUSSAIS Rémi, CROCHET Florian}}\\
+        \vspace{0.25cm}
+        {\large M1 ECAP -- Année 2024/2025}\\
+        \vspace{0.75cm}
+        {\large \today}
+    \end{center}
+    \vspace*{\fill}
+    \begin{center}
+        \textit{Responsable d'enseignement : Benoît SÉVI}\\
+        \href{mailto:benoit.sevi@univ-nantes.fr}{benoit.sevi@univ-nantes.fr}
+    \end{center}
+\end{titlepage}
+
+\begingroup
+\hypersetup{linkcolor=black}
+\renewcommand{\contentsname}{\centering Sommaire}
+\addtocontents{toc}{\protect\vspace{0.5cm}}
+\tableofcontents
+\endgroup
+
+\thispagestyle{empty}
+
+\newpage
+\setcounter{page}{1}
+
+# Chargement des librairies
+
+```{r}
+#| output: false
+
+library(readxl)
+library(tidyverse)
+library(tseries)
+library(forecast)
+library(gridExtra)
+library(lmtest)
+library(sandwich)
+```
+
+```{r}
+rend_ble <- read_excel("data/wheat_futures_returns_2006_2022.xlsx")
+```
+
+```{r}
+rend_ble_ts <- ts(
+  data = rend_ble$return,
+  start = c(2006, 1, 2),
+  frequency = 252
+)
+```
+
+```{r}
+# Fonction pour afficher les graphiques
+
+fonction_graph <- function(df, variable, titre_variable, titre_graph) {
+  df |>
+    ggplot() +
+    aes(x = date, y = !!sym(variable)) +
+    geom_line(color = "blue", size = 0.5, na.rm = TRUE) +
+    labs(
+      title = titre_graph,
+      x = "Date",
+      y = titre_variable
+    ) +
+    theme_bw() +
+    theme(
+      plot.title = element_text(hjust = 0.5, face = "bold")
+    )
+}
+```
+
+
+
+\newpage
+# Distribution des rendements quotidiens
+
+```{r}
+graph_rend_ble <- fonction_graph(
+  rend_ble,
+  "return",
+  "Rendements",
+  "Distribution des rendements quotidiens"
+)
+
+graph_rend_ble
+```
+
+
+
+\newpage
+# Vérification de la stationnarité
+
+```{r}
+adf.test(rend_ble_ts)
+```
+
+Le test de Dickey-Fuller augmenté (ADF) permet de vérifier si une série temporelle est stationnaire. Les hypothèses du test sont les suivantes : H0 stipule que la série a une racine unitaire, donc qu'elle est non stationnaire, tandis que H1 indique que la série est stationnaire. Les résultats du test montrent une statistique de test de -16.304 et une p-value inférieure à 0,01, ce qui est très faible. Par conséquent, on rejette l'hypothèse nulle (H0) au niveau de 1%, concluant que la série des rendements est stationnaire.
+
+
+
+\newpage
+# Spécification de type ARMA
+
+```{r}
+Acf(
+  rend_ble_ts,
+  main = "ACF de la série de rendements",
+  lag.max = 35
+)
+Pacf(
+  rend_ble_ts,
+  main = "PACF de la série de rendements",
+  lag.max = 35
+)
+```
+
+L'analyse des fonctions d'autocorrélation (ACF) et d'autocorrélation partielle (PACF) révèle l'absence d'autocorrélations significatives aux premiers retards. Nous choisissons donc de modéliser la série à l'aide d'un modèle autorégressif d'ordre 1 (AR(1)).
+
+
+```{r}
+modele_ar1 <- Arima(rend_ble_ts, order = c(1, 0, 0))
+summary(modele_ar1)
+```
+
+
+```{r}
+Acf(
+  modele_ar1$residuals,
+  main = "ACF des résidus de la modélisation",
+  lag.max = 35
+)
+Pacf(
+  modele_ar1$residuals,
+  main = "PACF des résidus de la modélisation",
+  lag.max = 35
+)
+```
+
+L'analyse de l'ACF et de la PACF des résidus montre que les autocorrélations ne sont pas significatives, ou sont proches de ne pas l'être, pour les retards considérés. Les résidus semblent donc se comporter comme un bruit blanc. Par conséquent, nous conservons le modèle autorégressif d'ordre 1.
+
+
+
+\newpage
+# Tableau comparatif et graphiques pour les prévisions à 1 et 5 jours
+
+## Nombre de jours
+
+```{r}
+# Estimation sur 10 ans
+
+date_debut_est_10 <- rend_ble[[1, 1]]
+date_fin_est <- date_debut_est_10 + years(10)
+
+nb_est_10 <- rend_ble |>
+  filter(date >= date_debut_est_10 & date <= date_fin_est) |>
+  nrow()
+nb_est_10
+
+
+# Estimation sur 3 ans
+
+date_debut_est_3 <- date_fin_est - years(3)
+# date_fin_est
+
+nb_est_3 <- rend_ble |>
+  filter(date >= date_debut_est_3 & date <= date_fin_est) |>
+  nrow()
+nb_est_3
+
+
+# Prévision
+
+date_debut_prev <- date_fin_est + days(1)
+date_fin_prev <- rend_ble[[nrow(rend_ble), 1]]
+
+nb_prev <- rend_ble |>
+  filter(date >= date_debut_prev & date <= date_fin_prev) |>
+  nrow()
+nb_prev
+```
+
+
+\newpage
+## Tableau comparatif
+
+```{r}
+set.seed(246)
+
+T <- nb_prev + 1
+
+# Initialisation du tableau de résultats
+
+tableau_comparatif <- tibble(
+  date = rep(NA_Date_, T),
+  realisation = rep(NA_real_, T),
+  marche_aleatoire = rep(NA_real_, T),
+  phi1_10 = rep(NA_real_, T),
+  phi1_3 = rep(NA_real_, T),
+  A10_1 = rep(NA_real_, T),
+  A3_1 = rep(NA_real_, T),
+  A10_5 = rep(NA_real_, T),
+  A3_5 = rep(NA_real_, T)
+)
+
+
+for (t in 1:T) {
+  derniere_est <- nb_est_10 + t - 1
+  date_t <- rend_ble$date[derniere_est]
+  realisation_t <- rend_ble$return[derniere_est]
+
+  # Valeurs par défaut (NA)
+  marche_aleatoire <-
+    A10_1 <-
+    A3_1 <-
+    A10_5 <-
+    A3_5 <-
+    phi1_10 <-
+    phi1_3 <-
+    NA
+
+  # Yt utilisé pour les prévisions à 1 jour
+  if (t >= 2) {
+    realisation_1j <- rend_ble$return[derniere_est - 1]
+
+    epsilon <- rnorm(1, mean = 0, sd = 1)
+
+    marche_aleatoire <- realisation_1j + epsilon
+
+    # Coefficients AR(1)
+    phi1_10 <- coef(
+      Arima(
+        rend_ble$return[t:derniere_est],
+        order = c(1, 0, 0)
+      )
+    )[1]
+
+    phi1_3 <- coef(
+      Arima(
+        rend_ble$return[(derniere_est - nb_est_3):derniere_est],
+        order = c(1, 0, 0)
+      )
+    )[1]
+
+    # Prévision à 1 jour
+    A10_1 <- phi1_10 * realisation_1j
+    A3_1 <- phi1_3 * realisation_1j
+  }
+
+
+  # Yt utilisé pour les prévisions à 5 jours
+  if (t >= 6) {
+    realisation_5j <- rend_ble$return[derniere_est - 5]
+    A10_5 <- phi1_10^5 * realisation_5j
+    A3_5 <- phi1_3^5 * realisation_5j
+  }
+
+
+  # Remplissage du tableau
+  tableau_comparatif[t, ] <- list(
+    date_t, realisation_t, marche_aleatoire,
+    phi1_10, phi1_3, A10_1, A3_1, A10_5, A3_5
+  )
+}
+```
+
+
+\newpage
+## Représentations graphiques
+
+```{r}
+# Paramètres
+params <- list(
+  list(
+    "realisation",
+    "Rendements",
+    "Distribution des rendements réalisés"
+  ),
+  list(
+    "marche_aleatoire",
+    "Rendements",
+    "Distribution de la marche aléatoire"
+  ),
+  list(
+    "A10_1",
+    "Prévisions A10_1",
+    "Prévisions 1j avec les données des 10 dernières années"
+  ),
+  list(
+    "A3_1",
+    "Prévisions A3_1",
+    "Prévisions 1j avec les données des 3 dernières années"
+  ),
+  list(
+    "A10_5",
+    "Prévisions A10_5",
+    "Prévisions 5j avec les données des 10 dernières années"
+  ),
+  list(
+    "A3_5",
+    "Prévisions A3_5",
+    "Prévisions 5j avec les données des 3 dernières années"
+  )
+)
+
+# Affichage
+walk(params, ~ {
+  p <- fonction_graph(tableau_comparatif, .x[[1]], .x[[2]], .x[[3]])
+  print(p)
+})
+```
+
+
+
+\newpage
+# Mincer-Zarnowitz
+
+## Fonction
+
+```{r}
+fonction_mz <- function(y, prevision, nom_prevision) {
+  # ------------------------------
+  #            Modèle
+  # ------------------------------
+
+  modele <- lm(y ~ prevision) # régression
+  resume <- summary(modele)
+
+
+  # ------------------------------
+  #            alpha
+  # ------------------------------
+
+  alpha_est <- resume$coefficients["(Intercept)", "Estimate"]
+
+  alpha_pvalue <- resume$coefficients["(Intercept)", "Pr(>|t|)"]
+
+  ## Vérification de l'hypothèse alpha = 0
+  H0_alpha <- if (alpha_pvalue < 0.05) "rejetée" else "non rejetée"
+
+
+  # ------------------------------
+  #            beta
+  # ------------------------------
+
+  beta_est <- resume$coefficients["prevision", "Estimate"]
+  beta_sd <- resume$coefficients["prevision", "Std. Error"]
+
+  beta_tstat <- (beta_est - 1) / beta_sd # Statistique de test pour beta = 1
+
+  ddl <- resume$df[2] # Degrés de liberté
+
+  beta_pvalue <- 2 * pt(-abs(beta_tstat), ddl) # Test bilatérale
+
+  ## Vérification de l'hypothèse beta = 1
+  H0_beta <- if (beta_pvalue < 0.05) "rejetée" else "non rejetée"
+
+
+  # ------------------------------
+  #             Test
+  # ------------------------------
+
+  ## Vérification de l'hypothèse alpha = 0 et beta = 1
+
+  H0 <- if (H0_alpha == "rejetée" | H0_beta == "rejetée") {
+    "H0 rejetée"
+  } else {
+    "H0 non rejetée"
+  }
+
+
+  # ------------------------------
+  #           Résultat
+  # ------------------------------
+
+  tableau_mz <- tibble(
+    nom_prevision = nom_prevision,
+    alpha = alpha_est,
+    beta = beta_est,
+    alpha_pvalue = alpha_pvalue,
+    beta_pvalue = beta_pvalue,
+    H0_alpha = H0_alpha,
+    H0_beta = H0_beta,
+    H0 = H0
+  )
+
+  return(tableau_mz)
+}
+```
+
+
+\newpage
+## Résultat
+
+```{r}
+# Modèle de référence : marche_aleatoire
+nom_previsions <- c("marche_aleatoire", "A10_1", "A3_1", "A10_5", "A3_5")
+
+resultat_mz <- map(nom_previsions, function(p) {
+  fonction_mz(
+    tableau_comparatif$realisation,
+    tableau_comparatif[[p]],
+    p
+  )
+}) |> bind_rows()
+
+resultat_mz[, 1:5]
+resultat_mz[, c(1, 6, 7, 8)]
+```
+
+
+\newpage
+## Interprétation
+
+Le test de Mincer-Zarnowitz évalue la qualité des prévisions en comparant 
+$\hat{Y}_{t+h|t}$ aux valeurs réelles $Y_{t+h}$ à travers un modèle linéaire. L'hypothèse nulle ($H_0$) stipule que $\alpha = 0$ et $\beta = 1$, tandis que l'hypothèse alternative ($H_1$) suggère une déviation de ces valeurs. Si $H_0$ est rejetée, la prévision est considérée comme n'étant pas de bonne qualité.
+
+Pour le modèle de marche aléatoire, $\alpha$ est proche de zéro, mais $\beta$ est très faible. La p-value associée à $\alpha$ (0.589) indique que $H_0$ n’est pas rejetée pour $\alpha$, mais celle pour $\beta$ est extrêmement faible (0.000), entraînant le rejet de $H_0$ pour $\beta$. Cela montre une forte déviation de $\beta$ par rapport à 1, ce qui indique que le modèle de marche aléatoire n'est pas idéal.
+
+Concernant la prévision “A10_1”, $\alpha$ est proche de zéro et $\beta$ a une p-value de 0.338, supérieure à 0.05, ce qui signifie que $H_0$ n’est pas rejeté pour $\beta$. La prévision “A10_1” est donc correcte, avec des coefficients proches des valeurs théoriques.
+
+Pour “A3_1”, $\alpha$ et $\beta$ sont également proches des valeurs attendues. Les p-values indiquent que $H_0$ n’est pas rejetée pour les deux paramètres, suggérant que cette prévision est correcte.
+
+Dans le cas de “A10_5”, bien que $\beta$ soit très éloigné de 1, $H_0$ n’est pas rejeté pour $\beta$ (p-value = 0.076), ce qui signifie que la déviation n’est pas statistiquement significative. Ainsi, la prévision reste acceptable, malgré l'écart de $\beta$.
+
+Pour “A3_5”, $\alpha$ est proche de zéro et $\beta$ est élevé. Les p-values montrent que $H_0$ n’est pas rejetée pour $\alpha$ et $\beta$, ce qui suggère que cette prévision est correcte et acceptable.
+
+En conclusion, les prévisions du modèle “marche_aleatoire” sont de qualité inférieure, principalement en raison de la déviation de $\beta$ par rapport à 1, indiquant une mauvaise capacité prédictive. Les modèles “A10_1”, “A3_1” et “A3_5” offrent des résultats plus fiables, avec des coefficients proches des valeurs théoriques attendues. Le modèle “A3_1” est le plus conforme à $H_0$, tandis que “A10_5” et “A3_5” sont acceptables malgré quelques écarts. Ainsi, les modèles alternatifs surpassent largement la marche aléatoire en termes de précision et de robustesse.
+
+
+
+\newpage
+# Statistique de Diebold et Mariano
+
+## Calcul des critères MSE, MAD et Quad-Quad pour chaque modèle de prévision
+
+### Calcul des critères
+
+```{r}
+# MSE
+fonction_mse <- function(df, y, prevision) {
+  mse <- (df[[y]] - df[[prevision]])^2
+  return(mse)
+}
+
+# MAD
+fonction_mad <- function(df, y, prevision) {
+  mad <- abs(df[[y]] - df[[prevision]])
+  return(mad)
+}
+
+# Quad-Quad
+fonction_quad_quad <- function(df, y, prevision, alpha1, alpha2) {
+  quad_quad <- alpha1 * (df[[y]] - df[[prevision]])^2 +
+    alpha2 * ifelse(
+      (df[[y]] - df[[prevision]]) < 0,
+      (df[[y]] - df[[prevision]])^2,
+      0
+    )
+  return(quad_quad)
+}
+```
+
+
+### Calcul pour chaque modèle de prévision
+
+```{r}
+# Liste des modèles de prévision
+nom_previsions <- c("marche_aleatoire", "A10_1", "A3_1", "A10_5", "A3_5")
+
+# Fonction
+calculer_critere <- function(
+    fonction_critere, previsions, alpha1 = NULL, alpha2 = NULL, nom = NULL) {
+  resultat <- tableau_comparatif |>
+    select(date) |>
+    bind_cols(
+      map(previsions, ~ {
+        if (!is.null(alpha1) & !is.null(alpha2)) {
+          fonction_critere(tableau_comparatif, "realisation", ., alpha1, alpha2)
+        } else {
+          fonction_critere(tableau_comparatif, "realisation", .)
+        }
+      }) |>
+        set_names(previsions)
+    )
+
+  attr(resultat, "nom") <- nom # Utilisation du nom comme attribut
+
+  return(resultat)
+}
+
+
+# MSE
+mse <- calculer_critere(fonction_mse, nom_previsions, nom = "mse")
+mse
+
+# MAD
+mad <- calculer_critere(fonction_mad, nom_previsions, nom = "mad")
+mad
+
+# Quad-Quad
+quad_quad <- calculer_critere(
+  fonction_quad_quad,
+  nom_previsions,
+  alpha1 = 1,
+  alpha2 = 1,
+  "quad_quad"
+)
+quad_quad
+```
+
+
+\newpage
+## Algorithme du test de Diebold-Mariano
+
+```{r}
+fonction_dm <- function(critere, modele_A, modele_B) {
+  # Extraction des pertes
+  perte_A <- critere[[modele_A]]
+  perte_B <- critere[[modele_B]]
+
+  # Calcul de delta (différence des pertes sans valeurs manquantes)
+  delta <- na.omit(perte_A - perte_B)
+
+  # Régression pour obtenir la statistique DM
+  regression <- lm(delta ~ 1)
+
+  # Estimation de la covariance des erreurs avec la procédure Newey-West
+  lag_delta <- sqrt(length(delta))
+  covariance_residus <- NeweyWest(regression, lag = lag_delta)
+
+  # Calcul de la statistique de test DM
+  sigma_carre_NW <- covariance_residus[1, 1]
+  DM_stat <- mean(delta) / sqrt(sigma_carre_NW / length(delta))
+
+  # Décision de rejet en fonction du test DM
+  alpha <- 0.05
+  valeur_critique <- qnorm(1 - alpha / 2)
+
+  if (abs(DM_stat) > valeur_critique) {
+    if (DM_stat < 0) {
+      decision <- "H0 rejetée"
+      meilleur_modele <- modele_A
+    } else {
+      decision <- "H0 rejetée"
+      meilleur_modele <- modele_B
+    }
+  } else {
+    decision <- "H0 non rejetée"
+    meilleur_modele <- NA
+  }
+
+
+  # Résultat
+  resultat <- tibble(
+    critere = attr(critere, "nom"),
+    modele_A = modele_A,
+    modele_B = modele_B,
+    DM_stat = DM_stat,
+    decision = decision,
+    meilleur_modele = meilleur_modele
+  )
+
+  return(resultat)
+}
+```
+
+
+\newpage
+## Résultat
+
+```{r}
+# Paramètres
+criteres <- list(mse, mad, quad_quad)
+modeles <- c("marche_aleatoire", "A10_1", "A3_1", "A10_5", "A3_5")
+
+# fonction_dm à chaque combinaison de criteres et modeles
+resultat_dm <- map(modeles, function(i) {
+  map(modeles[modeles > i], function(j) {
+    map(criteres, function(criteres) {
+      fonction_dm(criteres, i, j)
+    }) |> bind_rows()
+  })
+}) |> bind_rows()
+
+print(resultat_dm, n = 30)
+```
+
+
+```{r}
+compte_meilleur_modele <- tibble(
+  modele = modeles,
+  nb_apparitions = map_int(modeles, ~ sum(resultat_dm$meilleur_modele == .x))
+)
+
+compte_meilleur_modele
+```
+
+
+\newpage
+## Interprétation
+
+Les résultats du test de Diebold et Mariano montrent que la marche aléatoire n'est jamais le modèle le plus performant, l'hypothèse nulle étant systématiquement rejetée. Cela suggère que les modèles A10_1, A3_1, A10_5, et A3_5 offrent de meilleures prévisions. Parmi eux, A10_1 et A3_1 se distinguent fréquemment comme les meilleurs, avec A3_1 en tête, sélectionné 9 fois contre 8 pour A10_1. Les autres modèles apparaissent moins souvent comme les meilleurs, indiquant une performance légèrement inférieure. En conclusion, bien que A3_1 soit légèrement plus performant, A10_1 constitue également une alternative solide, et ensemble, ces deux modèles surpassent largement la marche aléatoire, prouvant leur efficacité pour les prévisions.
+
+
+
+\newpage
+# Conclusion
+
+En conclusion, les tests de Mincer-Zarnowitz et de Diebold et Mariano montrent que la marche aléatoire est un modèle peu fiable en raison de la déviation significative de ses paramètres. Les prévisions des modèles A10_1, A3_1, A10_5 et A3_5 sont globalement plus précises, avec A3_1 et A10_1 se distinguant particulièrement. Ces deux modèles surpassent largement la marche aléatoire en termes de qualité et de fiabilité des prévisions, A3_1 étant légèrement plus performant. Ces résultats confirment l'efficacité de ces modèles alternatifs pour les prévisions.

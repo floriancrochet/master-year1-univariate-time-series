@@ -1,0 +1,1079 @@
+---
+title: "TD3 Saisonnalité"
+author: "Florian Crochet, Isaline Hervé"
+format: pdf
+toc: true
+toc-title: Sommaire
+toc-depth: 4
+header-includes: |
+  \usepackage{amsmath}
+---
+
+\newpage
+
+# Développements et simulation de modèles saisonniers
+
+## Développement, type de modèle et nombre de coefficients à estimer
+
+### Première équation
+
+\begin{flushleft}
+$Y_t = \displaystyle \frac{(1 + \theta_1 L + \theta_2 L^2)(1 + \Theta_1 L^4)}{(1 - \phi_1 L)(1 - \Phi_1 L^4)} \varepsilon_t$
+
+\vspace{0.5cm}
+
+Il s'agit d'un modèle SARMA(1, 2)(1, 1)$_4$.
+
+\vspace{0.5cm}
+
+En développant, on obtient :
+
+$Y_t = \displaystyle \frac{1 + \theta_1 L + \theta_2 L^2 + \Theta_1 L^4 + \theta_1 \Theta_1 L^5 + \theta_2 \Theta_1 L^6}{1 - \phi_1 L - \Phi_1 L^4 + \phi_1 \Phi_1 L^5} \varepsilon_t$
+
+\vspace{0.5cm}
+
+Le modèle est de type ARMA(5, 6) avec 2 coefficients AR et 1 coefficient MA nuls, soit 8 coefficients à estimer.
+\end{flushleft}
+
+### Deuxième équation
+
+\begin{flushleft}
+$Y_t = \displaystyle \frac{(1 + \theta_1 L)(1 + \Theta_1 L^6)}{(1 - \phi_1 L)(1 - \Phi_1 L^6)} \varepsilon_t$
+
+\vspace{0.5cm} % Ajoute un espace vertical
+
+Il s'agit d'un modèle SARMA(1, 1)(1, 1)$_6$.
+
+\vspace{0.5cm}
+
+En développant, on obtient :
+
+$Y_t = \displaystyle \frac{1 + \theta_1 L + \Theta_1 L^6 + \theta_1 \Theta_1 L^7}{1 - \phi_1 L - \Phi_1 L^6 + \phi_1 \Phi_1 L^7} \varepsilon_t$
+
+\vspace{0.5cm}
+
+Le modèle est de type ARMA(7, 7) avec 4 coefficients AR et 4 coefficients MA nuls, soit 6 coefficients à estimer.
+\end{flushleft}
+
+### Troisième équation
+
+\begin{flushleft}
+$Y_t = \displaystyle \frac{(1 + \Theta_1 L^{12})}{(1 - \phi_1 L - \phi_2 L^2)} \varepsilon_t$
+
+\vspace{0.5cm}
+
+Il s'agit d'un modèle SARMA(2, 0)(0, 1)$_{12}$.
+
+Ce modèle est également de type ARMA(2, 12) avec 0 coefficient AR et 11 coefficients MA nuls, soit 3 coefficients à estimer.
+\end{flushleft}
+
+
+## Questions
+
+```{r}
+library(astsa)
+library(forecast)
+library(tidyverse)
+```
+
+### 1.
+
+#### Premier modèle
+
+```{r}
+set.seed(123)
+```
+
+Pour commencer, nous allons définir des coefficients :
+
+```{r}
+ar_coef <- c(0.4)         
+ma_coef <- c(0.3, 0.3)   
+sar_coef <- c(0.4)       
+sma_coef <- c(0.3)       
+saisonnalite <- 4
+```
+
+Simulation du modèle SARMA(1,2)(1,1)[4] :
+
+```{r}
+sarma1 <- sarima.sim(ar = ar_coef, ma = ma_coef, 
+                    sar = sar_coef, sma = sma_coef, 
+                    S = saisonnalite, n = 500)
+```
+
+Affichage de la série temporelle et des autocorrélogrammes :
+
+```{r}
+par(mfrow=c(1,1))
+ts.plot(sarma1, main="Simulation d'un SARMA(1,2)(1,1)[4]", ylab="Valeurs", col="royalblue")
+```
+
+Cette série montre des fluctuations importantes, avec notamment un pic positif important au milieu du temps représenté.
+
+```{r}
+par(mfrow=c(1,2))
+Acf(sarma1, main = "ACF - SARMA(1,2)(1,1)[4]")
+Pacf(sarma1, main = "PACF - SARMA(1,2)(1,1)[4]")
+```
+
+En ce qui concerne l'ACF de cette série, nous observons une décroissance quasiment exponentielle, ce qui était attendue, sauf pour le retard 4.
+Les retards significatifs sur le PACF alternent entre valeurs positives et négatives et décroient, mais seulement après le 3ème retard, ce qui n'est pas logique par rapport à la série.
+
+#### Deuxième modèle
+
+```{r}
+set.seed(123)
+```
+
+Définition des coefficients :
+
+```{r}
+ar_coef <- c(0.4)         
+ma_coef <- c(0.4)   
+sar_coef <- c(0.4)       
+sma_coef <- c(0.4)       
+saisonnalite <- 6
+```
+
+Simulation du modèle SARMA(1,1)(1,1)[6] :
+
+```{r}
+sarma2 <- sarima.sim(ar = ar_coef, ma = ma_coef, 
+                    sar = sar_coef, sma = sma_coef, 
+                    S = saisonnalite, n = 500)
+```
+
+Affichage de la série temporelle et des autocorrélogrammes :
+
+```{r}
+par(mfrow=c(1,1))
+ts.plot(sarma2, main="Simulation d'un SARMA(1,1)(1,1)[6]", ylab="Valeurs", col="darkred")
+```
+
+Comme pour la série précédente, nous n'observons pas de tendance marquée mais une présence de saisonnalité, avec divers chocs positifs et négatifs à certaines période de temps.
+
+```{r}
+par(mfrow=c(1,2))
+Acf(sarma2, main = "ACF - SARMA(1,1)(1,1)[6]")
+Pacf(sarma2, main = "PACF - SARMA(1,1)(1,1)[6]")
+```
+
+L'ACF et le PACF ne suivent pas les attentes envers les autocorrélogrammes pour une série avec ces caractéristiques. En effet, l'ACF ne décroit pas exponentiellement et pour le PACF, l'alternance entre valeurs positives et négatives et la baisse de la significativité des coéfficient sont irrégulières.
+
+#### Troisième modèle
+
+```{r}
+set.seed(123)
+```
+
+Définition des coefficients :
+
+```{r}
+ar_coef <- c(0.6, 0.3)         
+ma_coef <- c(0)   
+sar_coef <- c(0)       
+sma_coef <- c(0.8)       
+saisonnalite <- 12
+```
+
+Simulation du modèle SARMA(2,0)(0,1)[12] :
+
+```{r}
+sarma3 <- sarima.sim(ar = ar_coef, ma = ma_coef, 
+                    sar = sar_coef, sma = sma_coef, 
+                    S = saisonnalite, n = 500)
+```
+
+Affichage de la série temporelle et des autocorrélogrammes :
+
+```{r}
+par(mfrow=c(1,1))
+ts.plot(sarma3, main="Simulation d'un SARMA(2,0)(0,1)[12]", ylab="Valeurs", col="royalblue")
+```
+
+D'après la représentation graphique de cette série, nous constatons que les valeurs fluctuent beaucoup, mais sans tendance générale présente sur toute la durée du temps défini.
+
+```{r}
+par(mfrow=c(1,2))
+Acf(sarma3, main = "ACF - SARMA(2,0)(0,1)[12]")
+Pacf(sarma3, main = "PACF - SARMA(2,0)(0,1)[12]")
+```
+
+L'ACF de la série semble globalement suivre un décroissement exponentielle en termes de significativité des retards. Néanmoins, le PACF montre une irrégularité dans l'alternance du signe de ses coefficients ainsi que dans la décroissance de ses valeurs.
+
+### 2.
+
+#### Premier modèle
+
+Ajustement du modèle SARMA(1,2)(1,1)[4] :
+
+```{r}
+mod_sarma1 <- Arima(sarma1, order = c(1,0,2), seasonal = list(order = c(1,0,1), period = 4))
+```
+
+Autocorrélogrammes des résidus :
+
+```{r}
+Acf(residuals(mod_sarma1), main="ACF des résidus - SARMA(1,2)(1,1)[4]")
+Pacf(residuals(mod_sarma1), main="PACF des résidus - SARMA(1,2)(1,1)[4]")
+```
+
+Les autocorrélogrammes des résidus de cette modélisation ne montrent pas de retards significatifs. Alors, les résidus peuvent être considérés comme des bruits blancs.
+
+#### Deuxième modèle
+
+Ajustement du modèle SARMA(1,1)(1,1)[6] :
+
+```{r}
+mod_sarma2 <- Arima(sarma2, order = c(1,0,1), seasonal = list(order = c(1,0,1), period = 6))
+```
+
+Autocorrélogrammes des résidus :
+
+```{r}
+Acf(residuals(mod_sarma2), main="ACF des résidus - SARMA(1,1)(1,1)[6]")
+Pacf(residuals(mod_sarma2), main="PACF des résidus - SARMA(1,1)(1,1)[6]")
+```
+
+D'après l'ACF et le PACF des résidus de ce modèle, nous pouvons également conclure que les résidus correspondent à un bruit blanc, puisqu'aucun retard n'est significatif.
+
+#### Troisième modèle
+
+Ajustement du modèle SARMA(2,0)(0,1)[12] :
+
+```{r}
+mod_sarma3 <- Arima(sarma3, order = c(2,0,0), seasonal = list(order = c(0,0,1), period = 12))
+```
+
+Autocorrélogrammes des résidus :
+
+```{r}
+Acf(residuals(mod_sarma3), main="ACF des résidus - SARMA(2,0)(0,1)[12]")
+Pacf(residuals(mod_sarma3), main="PACF des résidus - SARMA(2,0)(0,1)[12]")
+```
+
+En observant l'ACF et le PACF des résidus pour cette modélisation, nous constatons que le lag 15 est très légèrement significatif. Alors, le fait que les résidus correspondent à des bruits blancs n'est pas assuré et reste à vérifier, comme avec un test de Ljung-Box par exemple.
+
+### 3.
+
+Afin de trouver dans chacun des cas d'autres façons de modéliser le processus simulé permettant d'obtenir des bruits blancs, nous nous sommes aidé des équations développées précédemment. 
+En effet, nous avions trouvé des correspondance avec des modèles ARMA que nous avons alors modélisé.
+
+#### Premier modèle 
+
+Ajustement du modèle ARMA(5,6) : 
+
+```{r}
+mod_sarma4 <- Arima(sarma1, order = c(5,0,6), seasonal = list(order = c(0,0,0)))
+```
+
+Autocorrélogrammes des résidus : 
+
+```{r}
+Acf(residuals(mod_sarma4), main="ACF des résidus - ARMA(5,6)")
+Pacf(residuals(mod_sarma4), main="PACF des résidus - ARMA(5,6)")
+```
+
+#### Deuxième modèle
+
+Ajustement du modèle ARMA(7,7) :
+
+```{r}
+mod_sarma5 <- Arima(sarma2, order = c(7,0,7), seasonal = list(order = c(0,0,0)))
+```
+
+Autocorrélogrammes des résidus : 
+
+```{r}
+Acf(residuals(mod_sarma5), main="ACF des résidus - ARMA(7,7)")
+Pacf(residuals(mod_sarma5), main="PACF des résidus - ARMA(7,7)")
+```
+
+#### Troisième modèle
+
+Ajustement du modèle ARMA(2,12) :
+
+```{r}
+mod_sarma6 <- Arima(sarma3, order = c(2,0,12), seasonal = list(order = c(0,0,0)))
+```
+
+Autocorrélogrammes des résidus : 
+
+```{r}
+Acf(residuals(mod_sarma6), main="ACF des résidus - ARMA(2,12)")
+Pacf(residuals(mod_sarma6), main="PACF des résidus - ARMA(2,12)")
+```
+
+Pour ces 3 modèles, nous n'observons aucun retard significatifs au niveau de l'ACF ou du PACF des résidus. Alors, nous pouvons affirmer que les résidus sont bien de type bruit blanc.
+
+\newpage
+
+# Analyse d'une série temporelle saisonnière : la consommation de gaz naturel en France (2008-2024)
+
+## Import des données
+
+```{r}
+load("data/fr_gas_consumption_monthly.RData")
+```
+
+## Transformation en série temporelle
+
+```{r}
+gas_ts <- ts(gas_consumption$consumption, start = c(2008, 1), frequency = 12) 
+```
+
+## Visualisation de la série temporelle
+
+```{r}
+par(mfrow=c(1,1))
+plot.ts(gas_ts, main="Consommation de gaz naturel en France (2008-2024)", col="royalblue", xlab = "Temps", ylab="Consommation")
+```
+
+D'après la représentation de cette série temporelle, nous pouvons constater une saisonnalité marquée, ce qui semble logique étant donné que les données représentes la consommation de gaz naturel. En effet, cela fait sens qu'il y est une augmentation de la consommation de gaz en hiver, et une baisse en été, chaque année. 
+De plus, comme décrit dans l'énoncé, nous n'observons pas de tendance évidente. 
+
+## Observation des autocorrélogrammes et caractéristiques
+
+```{r}
+Acf(gas_ts, main="Autocorrélogramme de la consommation de gaz")
+Pacf(gas_ts, main="Autocorrélogramme de la consommation de gaz")
+```
+
+Nous pouvons voir que l'ACF montre des pics tous les 12 mois. Cela confirme donc la forte saisonnalité annuelle supposé précedemment.
+
+Ensuite, le premier retard significatif positif en PACF suggère une composante AR.
+Puis, on observe une alternance de signes dans les retards suivants, ce qui évoque la présence d'un processus oscillatoire, sûrement lié à des effets saisonniers.
+
+```{r}
+decompo <- decompose(gas_ts)
+plot(decompo)
+```
+
+En décomposant la série comme présenté ci-dessus, nous pouvons voir que la tendance semble complexe et évoluant négativement, nous ne la prendrons donc pas en compte dans la modélisation.
+D'après la forte saisonnalité qui semble ressortir de cette série, nous pouvons alors essayer d'estimer un modèle SARIMA.
+
+## Modélisation de la série
+
+### Modèle - 1 - auto.arima
+
+```{r}
+# Ajustement automatique d'un modèle SARIMA avec saisonnalité à partir de la fonction auto.arima
+mod_sarima_1 <- auto.arima(gas_ts, seasonal = TRUE, d=0)
+
+summary(mod_sarima_1)
+```
+
+La fonction auto.arima, en précisant que la tendance est nulle, nous donne donc le modèle suivant : ARIMA(1,0,0)(0,1,1)[12], correspondant notamment bien en termes de nombre de retards (12).
+
+Nous pouvons observer les autocorrélogrammes suivant pour cette série : 
+
+```{r}
+Acf(residuals(mod_sarima_1), main="ACF des résidus - SARIMA(1,0,0)(0,1,1)[12]")
+Pacf(residuals(mod_sarima_1), main="ACF des résidus - SARIMA(1,0,0)(0,1,1)[12]")
+```
+
+Graphiquement, nous constatons que 2 retards sont légèrement significatifs au niveau de l'ACF, montrant que les résidus peuvent presque être considérés comme des bruits blancs.
+Au niveau du PACF, un seul retard sera significatif.
+
+Test de Ljung-Box : 
+
+```{r}
+Box.test(residuals(mod_sarima_1), lag=20, type="Ljung-Box")
+```
+
+Après cela, en observant la p-value du test de Ljung-Box, nous constatons qu'étant supérieure à 0.05, les résidus peuvent être considérés comme représentant du bruit blanc, ainsi le modèle est valide.
+
+Nous avons également testé d'autres modélisation pour cette série temporelle.
+
+### Modèle Arima - aléatoire 1
+
+Pour cet essai, afin que la modélisation corresponde à la série de consommation de gaz naturel, nous avons précisé que le nombre de retard devait être 12, que la tendance est inexistante et que la saisonnalité existe.
+
+```{r}
+mod_sarima_2 <- Arima(gas_ts, order=c(1,0,1), seasonal=list(order=c(1,1,0), period=12))
+summary(mod_sarima_2)
+```
+
+Autocorrélogrammes : 
+
+```{r}
+Acf(residuals(mod_sarima_2), main="ACF - Résidus SARIMA(1,0,1)(1,1,0)[12]")
+Pacf(residuals(mod_sarima_2), main="PACF - Résidus SARIMA(1,0,1)(1,1,0)[12]")
+```
+
+En observant l'ACF et le PACF, nous pouvons voir que certains lags sont significatifs, les résidus semblent alors ne pas être des bruits blancs.
+
+Test de Ljung-Box :
+
+```{r}
+Box.test(residuals(mod_sarima_2), lag=20, type="Ljung-Box")
+```
+
+La p-value du test de Ljung-Box est ici inférieure à 0.05, ce qui montre qu'il reste de l'autocorrélation et que les résidus ne peuvent pas être considérés comme du bruit blanc. La série peut alors être améliorée.
+
+### Modèle Arima - 2
+
+Ensuite, nous avons modélisé la série d'une autre façon. Comme pour les cas précédents, nous avons veillé à ce que le nombre de retard soit de 12, que la tendance soit nulle et la saisonnalité existante. 
+
+```{r}
+mod_sarima_3 <- Arima(gas_ts, order=c(2,0,0), seasonal=list(order=c(0,2,4), period=12))
+summary(mod_sarima_3)
+```
+
+Autocorrélogrammes : 
+
+```{r}
+Acf(residuals(mod_sarima_3), main="ACF - Résidus SARIMA(2,0,0)(0,2,4)[12]")
+Pacf(residuals(mod_sarima_3), main="PACF - Résidus SARIMA(2,0,0)(0,2,4)[12]")
+```
+
+D'après les autocorrélogrammes de cette modélisation, nous observons seulement un retard très légèrement significatif dans l'ACF. Alors, les résidus de la série peuvent certainement être considérés comme des bruits blancs.
+
+Test de Ljung-Box :
+
+```{r}
+Box.test(residuals(mod_sarima_3), lag=20, type="Ljung-Box")
+```
+
+Cela est confirmé par le test de Ljung-Box, car avec une p-value > 0.05, le modèle est valide et les résidus montrent du bruit blanc.
+
+### Comparaison des modèles
+
+Pour commencer, le 2ème modèle étant le seul à avoir une p-value < à 0.05 au test de Ljung-Box, nous pouvons écarter ce modèle.
+
+Du point de vue graphique, d'après les autocorrélogrammes produits ci-dessus, le meilleur modèle semble être le 3ème. En effet, c'est le modèle ayant le moins de coefficients significatifs sur ses autocorrélogrammes.
+
+De plus, nous pouvons également observer les critères d'informations afin de voir envers quel modèle sont-ils favorables.
+
+#### Tableau de comparaison de critères d'informations :
+
+```{r}
+table_comparaison <- data.frame(
+  Model = c("SARIMA(1,0,0)(0,1,1)[12]", 
+            "SARIMA(1,0,1)(1,1,0)[12]", 
+            "SARIMA(2,0,0)(0,2,4)[12]"),
+  AIC = c(AIC(mod_sarima_1), AIC(mod_sarima_2), AIC(mod_sarima_3)),
+  BIC = c(BIC(mod_sarima_1), BIC(mod_sarima_2), BIC(mod_sarima_3))
+)
+
+print(table_comparaison)
+```
+
+D'après l'AIC et le BIC de ces modèles, c'est également le modèle 3 qui semble être le plus optimal, avec un AIC et BIC plus faibles que pour les autres modèles.
+
+\newpage
+
+# Analyse d'une série temporelle saisonnière avec tendance linéaire : la fréquentation de l'aéroport Toulouse-Blagnac (1993-2008)
+
+## 1. Chargement de la base de données
+```{r}
+# Chargement
+load("data/tls_monthly_passengers.rda")
+
+# Vérification
+str(trafmensu)
+
+# Affichage
+plot(
+  trafmensu,
+  main = "Fréquentation de l'aéroport Toulouse-Blagnac (1993-2008)"
+)
+```
+
+
+## 2. Décomposition de la série
+
+```{r}
+# Décomposition
+decomp_trafmensu <- decompose(
+  trafmensu, 
+  type = "additive" # car l'amplitude des variations saisonnières est constante au fil du temps.
+)
+
+# Affichage
+plot(decomp_trafmensu)
+```
+
+
+## 3. Questions
+
+En observant la décomposition, nous remarquons une cassure de la tendance en 2001 due aux attentats du 11 septembre. La tendance est donc différente après 2001.
+Il est plus pertinent de réaliser une modélisation avant 2001 et une après 2001.
+
+De plus, nous observons des motifs réguliers dans la série des résidus, ce qui indique la présence d'autocorrélation.
+
+Nous devons donc retirer la tendance de la série et estimer la série sans tendance grâce à un modèle SARIMA.
+
+
+
+## 4. Suppression de la tendance
+
+```{r}
+# Série sans tendance
+trafmensu_sans_t <- trafmensu - decomp_trafmensu$trend
+
+# Affichage
+plot(
+  trafmensu_sans_t, 
+  main = "Série sans tendance"
+)
+```
+
+
+
+
+## 5. Modélisation en recourant à la différenciation saisonnière
+
+### 1. Différenciation
+
+```{r}
+d_trafmensu_sans_t <- diff(
+  trafmensu_sans_t,
+  lag = 12)
+
+plot(
+  d_trafmensu_sans_t, 
+  main = "Série avec différenciation saisonnière"
+)
+```
+
+
+### 2. Autocorrélogrammes
+
+```{r}
+d_trafmensu_sans_t |> 
+  ggAcf(lag.max = 48) +
+  scale_x_continuous(breaks = seq(0, 48, by = 4)) +
+  theme_bw()
+                       
+d_trafmensu_sans_t |> 
+  ggPacf(lag.max = 48) +
+  scale_x_continuous(breaks = seq(0, 48, by = 4)) +
+  theme_bw()
+```
+
+Nous allons essayer de déterminer les paramètres p, q, P et Q du modèle SARIMA(p, 0, q)(P, 0, Q)$_{12}$ en fonction des graphiques de l'ACF et de la PACF.
+
+L'ACF est significativement non nulle jusqu'au retard 1, donc q = 1.
+L'ACF est significativement non nulle jusqu'au retard saisonnier 1 ($1 \times 12$), donc Q = 1.
+
+La PACF est significativement non nulle jusqu'au retard 1, donc p = 1.
+La PACF est significativement non nulle jusqu'au retard saisonnier 1 ($3 \times 12$), donc P = 1.
+
+Nous obtenons un modèle SARIMA(1, 0, 1)(1, 0, 1)$_{12}$ 
+
+
+### 3. Série filtrée via un SARIMA(1, 0, 1)(1, 0, 1)$_{12}$ et comportement des résidus
+
+```{r}
+# Modèle
+sarima_d_trafmensu_sans_t <- Arima(
+  d_trafmensu_sans_t, 
+  order = c(1,0,1),
+  seasonal = list(order = c(1,0,1), period = 12)
+)
+
+# Autocorrélogrammes
+acf_sarima1 <- sarima_d_trafmensu_sans_t$residuals |> 
+  ggAcf(lag.max = 48) +
+  scale_x_continuous(breaks = seq(0, 48, by = 4))+
+  ggtitle("ACF des résidus du modèle SARIMA(1, 0, 1)(1, 0, 1)(12)") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+pacf_sarima1 <- sarima_d_trafmensu_sans_t$residuals |> 
+  ggPacf(lag.max = 48) +
+  scale_x_continuous(breaks = seq(0, 48, by = 4)) +
+  ggtitle("PACF des résidus du modèle SARIMA(1, 0, 1)(1, 0, 1)(12)") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+acf_sarima1
+pacf_sarima1
+```
+
+Graphiquement, les résidus ne suivent pas un bruit blanc et présentent encore des autocorrélations.
+
+Nous allons essayer de déterminer d'autres paramètres p, q, P et Q du modèle SARIMA(p, 0, q)(P, 0, Q)$_{12}$ en fonction des graphiques de l'ACF et de la PACF sur les résidus du modèle.
+
+L'ACF est significativement non nulle au retard 3, donc q = 3.
+La PACF est significativement non nulle retard 3, donc p = 3.
+
+
+### 4. Série filtrée via un SARIMA(3, 0, 3)(1, 0, 1)$_{12}$ et comportement des résidus
+
+```{r}
+# Modèle
+sarima_d_trafmensu_sans_t2 <- Arima(
+  d_trafmensu_sans_t, 
+  order = c(3,0,3),
+  seasonal = list(order = c(1,0,1), period = 12)
+)
+
+# Autocorrélogrammes
+acf_sarima2 <- sarima_d_trafmensu_sans_t2$residuals |> 
+  ggAcf(lag.max = 48) +
+  scale_x_continuous(breaks = seq(0, 48, by = 4)) +
+  ggtitle("ACF des résidus du modèle SARIMA(3, 0, 3)(1, 0, 1)(12)") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+pacf_sarima2 <- sarima_d_trafmensu_sans_t2$residuals |> 
+  ggPacf(lag.max = 48) +
+  scale_x_continuous(breaks = seq(0, 48, by = 4)) +
+  ggtitle("ACF des résidus du modèle SARIMA(3, 0, 3)(1, 0, 1)(12)") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+acf_sarima2
+pacf_sarima2
+```
+
+Les résidus suivent un bruit blanc et ne devraient pas présenter d'autocorrélation.
+
+Nous testons la nullité des paramètres estimés pour les différents retards, ainsi que la présence d'autocorrélations significatives à l'aide du test de Ljung-Box.
+
+```{r}
+# Test de Ljung-Box sur les résidus pour les 48 premiers lags
+
+resultat_Ljung_Box <- tibble(
+  lag = 1:48
+) |> 
+  mutate(
+    test_result = map(
+      lag,
+      ~ Box.test(
+          residuals(sarima_d_trafmensu_sans_t2), 
+          lag = .x, 
+          type = "Ljung-Box"
+        )
+    ),
+    X_squared = map_dbl(test_result, ~ .x$statistic),
+    df = map_dbl(test_result, ~ .x$parameter),
+    p_value = map_dbl(test_result, ~ .x$p.value),
+    significativite = ifelse(
+      p_value < 0.1,
+      "Rejet de H0",
+      "Non-rejet de H0"
+    )
+  ) |> 
+  select(lag, X_squared, df, p_value, significativite)
+
+print(resultat_Ljung_Box, n = 48)
+```
+
+Pour ces 48 premiers lags, l'hypothèse nulle n'est pas rejetée, ce qui indique une absence d'autocorrélation significative des résidus au seuil de 10 %.
+Le modèle est donc bien spécifié.
+
+
+Nous testons désormais la significativité de chaque coefficient grâce au test de Bartlett.
+
+```{r}
+# Fonction
+
+test_bartlett <- function(modele) {
+
+  T <- length(na.omit(trafmensu))
+  
+  # Coefficients du modèle
+  coefficients <- modele$coef[
+    -length(modele$coef)
+  ]
+
+  noms_coefficients <- names(coefficients)
+  
+  # Calcul de l'écart-type en utilisant la formule de Bartlett
+  ecart_type <- sqrt((1 / T) * (1 + 2 * sum(coefficients^2)))
+  
+  # Calcul de la statistique t pour chaque coefficient
+  t_stats <- coefficients / ecart_type
+
+  valeur_critique <- 1.96
+
+  resultats <- tibble(
+    nom_coefficient = noms_coefficients,
+    coefficient = coefficients,
+    ecart_type = ecart_type,
+    t_stats = t_stats,
+    significativite = ifelse(
+      abs(t_stats) > valeur_critique,
+      "Significatif",
+      "Non significatif"
+    )
+  )
+  
+  return(resultats)
+}
+```
+
+```{r}
+# Test de Bartlett
+
+test_bartlett(sarima_d_trafmensu_sans_t2)
+```
+
+La valeur absolue de la statistique de test est supérieure à 1,96 pour 6 coefficients. L'hypothèse nulle est donc rejetée, ce qui indique que les coefficients ar1, ar2, ar3, ma1, ma2 et sma1 sont significatifs au seuil de 5 %.
+
+En retirant les coefficients ma3 et sar1, nous obtenons un modèle SARIMA(3, 0, 2)(0, 0, 1)$_{12}$.
+
+
+### 5. Série filtrée via un SARIMA(3, 0, 2)(0, 0, 1)$_{12}$ et comportement des résidus
+
+```{r}
+# Modèle
+sarima_d_trafmensu_sans_t3 <- Arima(
+  d_trafmensu_sans_t, 
+  order = c(3,0,2),
+  seasonal = list(order = c(0,0,1), period = 12)
+)
+
+# Autocorrélogrammes
+acf_sarima3 <- sarima_d_trafmensu_sans_t3$residuals |> 
+  ggAcf(lag.max = 48) +
+  scale_x_continuous(breaks = seq(0, 48, by = 4)) +
+  ggtitle("ACF des résidus du modèle SARIMA(3, 0, 2)(0, 0, 1)(12)") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+pacf_sarima3 <- sarima_d_trafmensu_sans_t3$residuals |> 
+  ggPacf(lag.max = 48) +
+  scale_x_continuous(breaks = seq(0, 48, by = 4)) +
+  ggtitle("ACF des résidus du modèle SARIMA(3, 0, 2)(0, 0, 1)(12)") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+acf_sarima3
+pacf_sarima3
+```
+
+L'ACF est (légèrement) significativement non nulle aux retards 28 et 36.
+La PACF est (légèrement) significativement non nulle au retard 36.
+Il est possible que les résidus ne suivent pas un bruit blanc et présentent encore de l'autocorrélation.
+
+
+### 6. Conclusion
+
+Nous retenons le modèle SARIMA(3, 0, 3)(1, 0, 1)$_{12}$ dont les résidus suivent davantage un bruit blanc.
+
+
+
+## 6. Modélisation en utilisant un modèle de type saisonnier
+
+### 1. Modèle différenciation saisonnière d'ordre 1
+
+```{r}
+# Modèle
+sarima_trafmensu_sans_t4 <- Arima(
+  trafmensu_sans_t, 
+  order = c(0,0,0),
+  seasonal = list(order = c(0,1,0), period = 12)
+)
+
+# Autocorrélogrammes
+acf_sarima4 <- sarima_trafmensu_sans_t4$residuals |> 
+  ggAcf(lag.max = 48) +
+  scale_x_continuous(breaks = seq(0, 48, by = 4))+
+  ggtitle("ACF des résidus du modèle SARIMA(0, 0, 0)(0, 1, 0)(12)") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+pacf_sarima4 <- sarima_trafmensu_sans_t4$residuals |> 
+  ggPacf(lag.max = 48) +
+  scale_x_continuous(breaks = seq(0, 48, by = 4)) +
+  ggtitle("PACF des résidus du modèle SARIMA(0, 0, 0)(0, 1, 0)(12)") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+acf_sarima4
+pacf_sarima4
+```
+
+Graphiquement, les résidus ne suivent pas un bruit blanc et présentent encore des autocorrélations.
+
+L'ACF est significativement non nulle jusqu'au retard 1, donc q = 1.
+L'ACF est significativement non nulle jusqu'au retard saisonnier 1 ($1 \times 12$), donc Q = 1.
+
+La PACF est significativement non nulle jusqu'au retard 1, donc p = 1.
+La PACF est significativement non nulle jusqu'au retard saisonnier 1 ($3 \times 12$), donc P = 1.
+
+Nous obtenons un modèle SARIMA(1, 0, 1)(1, 1, 1)$_{12}$ 
+
+
+### 2. Série filtrée via un SARIMA(1, 0, 1)(1, 1, 1)$_{12}$ et comportement des résidus
+
+```{r}
+# Modèle
+sarima_trafmensu_sans_t5 <- Arima(
+  trafmensu_sans_t, 
+  order = c(1,0,1),
+  seasonal = list(order = c(1,0,1), period = 12)
+)
+
+# Autocorrélogrammes
+acf_sarima5 <- sarima_trafmensu_sans_t5$residuals |> 
+  ggAcf(lag.max = 48) +
+  scale_x_continuous(breaks = seq(0, 48, by = 4))+
+  ggtitle("ACF des résidus du modèle SARIMA(1, 0, 1)(1, 1, 1)(12)") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+pacf_sarima5 <- sarima_trafmensu_sans_t5$residuals |> 
+  ggPacf(lag.max = 48) +
+  scale_x_continuous(breaks = seq(0, 48, by = 4)) +
+  ggtitle("PACF des résidus du modèle SARIMA(1, 0, 1)(1, 1, 1)(12)") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+acf_sarima5
+pacf_sarima5
+```
+
+Graphiquement, les résidus ne suivent pas un bruit blanc et présentent encore des autocorrélations.
+
+Nous allons essayer de déterminer d'autres paramètres p, q, P et Q du modèle SARIMA(p, 0, q)(P, 1, Q)$_{12}$ en fonction des graphiques de l'ACF et de la PACF sur les résidus du modèle.
+
+L'ACF est significativement non nulle au retard 3, donc q = 3.
+La PACF est significativement non nulle retard 3, donc p = 3.
+
+
+### 3. Série filtrée via un SARIMA(3, 0, 3)(1, 1, 1)$_{12}$ et comportement des résidus
+
+```{r}
+# Modèle
+sarima_trafmensu_sans_t6 <- Arima(
+  trafmensu_sans_t, 
+  order = c(3,0,3),
+  seasonal = list(order = c(1,0,1), period = 12)
+)
+
+# Autocorrélogrammes
+acf_sarima6 <- sarima_trafmensu_sans_t6$residuals |> 
+  ggAcf(lag.max = 48) +
+  scale_x_continuous(breaks = seq(0, 48, by = 4)) +
+  ggtitle("ACF des résidus du modèle SARIMA(3, 0, 3)(1, 1, 1)(12)") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+pacf_sarima6 <- sarima_trafmensu_sans_t6$residuals |> 
+  ggPacf(lag.max = 48) +
+  scale_x_continuous(breaks = seq(0, 48, by = 4)) +
+  ggtitle("PACF des résidus du modèle SARIMA(3, 0, 3)(1, 1, 1)(12)") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+acf_sarima6
+pacf_sarima6
+```
+
+Les résidus suivent un bruit blanc et ne devraient pas présenter d'autocorrélation.
+
+Nous testons la nullité des paramètres estimés pour les différents retards, ainsi que la présence d'autocorrélations significatives à l'aide du test de Ljung-Box.
+
+```{r}
+# Test de Ljung-Box sur les résidus pour les 48 premiers lags
+
+resultat_Ljung_Box2 <- tibble(
+  lag = 1:48
+) |> 
+  mutate(
+    test_result = map(
+      lag,
+      ~ Box.test(
+          residuals(sarima_trafmensu_sans_t6), 
+          lag = .x, 
+          type = "Ljung-Box"
+        )
+    ),
+    X_squared = map_dbl(test_result, ~ .x$statistic),
+    df = map_dbl(test_result, ~ .x$parameter),
+    p_value = map_dbl(test_result, ~ .x$p.value),
+    significativite = ifelse(
+      p_value < 0.1,
+      "Rejet de H0",
+      "Non-rejet de H0"
+    )
+  ) |> 
+  select(lag, X_squared, df, p_value, significativite)
+
+print(resultat_Ljung_Box2, n = 48)
+```
+
+Pour ces 48 premiers lags, l'hypothèse nulle n'est pas rejetée, ce qui indique une absence d'autocorrélation significative des résidus au seuil de 10 %.
+Le modèle est donc bien spécifié.
+
+
+Nous testons désormais la significativité de chaque coefficient grâce au test de Bartlett.
+
+
+```{r}
+# Test de Bartlett
+
+test_bartlett(sarima_trafmensu_sans_t6)
+```
+
+La valeur absolue de la statistique de test est supérieure à 1,96 pour 6 coefficients. L'hypothèse nulle est donc rejetée, ce qui indique que les coefficients ar1, ar2, ar3, ma1, ma2, sar1 et sma1 sont significatifs au seuil de 5 %.
+
+En retirant le coefficient ma3, nous obtenons un modèle SARIMA(3, 0, 2)(1, 1, 1)$_{12}$.
+
+
+### 4. Série filtrée via un SARIMA(3, 0, 2)(1, 1, 1)$_{12}$ et comportement des résidus
+
+```{r}
+# Modèle
+sarima_trafmensu_sans_t7 <- Arima(
+  trafmensu_sans_t, 
+  order = c(3,0,2),
+  seasonal = list(order = c(1,1,1), period = 12)
+)
+
+# Autocorrélogrammes
+acf_sarima7 <- sarima_trafmensu_sans_t7$residuals |> 
+  ggAcf(lag.max = 48) +
+  scale_x_continuous(breaks = seq(0, 48, by = 4)) +
+  ggtitle("ACF des résidus du modèle SARIMA(3, 0, 2)(1, 1, 1)(12)") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+pacf_sarima7 <- sarima_trafmensu_sans_t7$residuals |> 
+  ggPacf(lag.max = 48) +
+  scale_x_continuous(breaks = seq(0, 48, by = 4)) +
+  ggtitle("PACF des résidus du modèle SARIMA(3, 0, 2)(1, 1, 1)(12)") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+acf_sarima7
+pacf_sarima7
+```
+
+L'ACF est (légèrement) significativement non nulle aux retards 28 et 36.
+Il est possible que les résidus ne suivent pas un bruit blanc et présentent encore de l'autocorrélation.
+
+
+### 5. Conclusion
+
+Nous retenons le modèle SARIMA(3, 0, 3)(1, 1, 1)$_{12}$ dont les résidus suivent davantage un bruit blanc.
+
+
+## 7. Comparaison des résultats de ces deux modèles
+
+### 1. Modèles
+
+```{r}
+# SARIMA(3, 0, 3)(1, 0, 1)(12)
+sarima_d_trafmensu_sans_t2
+
+# SARIMA(3, 0, 3)(1, 1, 1)(12)
+sarima_trafmensu_sans_t6
+```
+
+Le modèle SARIMA(3, 0, 3)(1, 0, 1)$_{12}$ est le meilleur selon les critères AIC et BIC qui sont plus faibles.
+
+### 2. Autocorrélogrammes : ACF 
+
+```{r}
+acf_sarima2
+acf_sarima6
+```
+
+Les deux deux autocorrélogrammes correspondent à ceux de bruit blanc.
+
+
+### 3. Autocorrélogrammes partiels  : PACF 
+
+```{r}
+pacf_sarima2
+pacf_sarima6
+```
+
+Le PACF du modèle SARIMA(3, 0, 3)(1, 1, 1)$_{12}$ est légèrement significatif aux retards 16 et 44.
+
+
+### 6. Conclusion
+
+Nous retenons le modèle SARIMA(3, 0, 3)(1, 0, 1)$_{12}$, dont la différenciation saisonnière a été effectuée au préalable, notamment parce que son AIC et son BIC sont plus faibles.
+
+
+## 8. Conclusion
+
+## 1. On sépare notre tendance en deux périodes de temps.
+
+```{r}
+# Propriétés de la série
+start(trafmensu)  # La série commence en janvier 1993
+end(trafmensu)    # La série se termine en octobre 2007
+frequency(trafmensu)  # La série est mensuelle
+
+# Série avant septembre 2001
+trafmensu_avant_sept2001 <- window(trafmensu, start = c(1993, 1), end = c(2001, 08))
+
+# Série après septembre 2001
+trafmensu_apres_sept2001 <- window(trafmensu, start = c(2001, 9))
+
+# Affichage
+plot(trafmensu_avant_sept2001, main = "Série avant septembre 2001", col = "blue")
+plot(trafmensu_apres_sept2001, main = "Série après septembre 2001", col = "red")
+```
+
+```{r}
+# Décomposition
+decomp_trafmensu_avant_sept2001 <- decompose(
+  trafmensu_avant_sept2001, 
+  type = "additive"
+)
+
+# Affichage
+plot(decomp_trafmensu_avant_sept2001)
+```
+
+```{r}
+# Décomposition
+decomp_trafmensu_apres_sept2001 <- decompose(
+  trafmensu_apres_sept2001, 
+  type = "additive"
+)
+
+# Affichage
+plot(decomp_trafmensu_apres_sept2001)
+```
+
+
+## 2. On sépare notre modèle en deux périodes de temps.
+
+```{r}
+# Récupération des valeurs ajustées sous forme de série temporelle
+fitted_sarima <- ts(
+  fitted(sarima_d_trafmensu_sans_t2), 
+  start = start(trafmensu), 
+  frequency = frequency(trafmensu)
+)
+```
+
+```{r}
+# Modèle avant septembre 2001
+sarima_avant_sept2001 <- window(
+  fitted_sarima, start = c(1993, 1), end = c(2001, 08)
+)
+
+# Modèle après septembre 2001
+sarima_apres_sept2001 <- window(
+  fitted_sarima, start = c(2001, 9)
+)
+
+# Affichage
+plot(sarima_avant_sept2001, main = "Estimation avant septembre 2001", col = "blue")
+plot(sarima_apres_sept2001, main = "Estimation après septembre 2001", col = "red")
+```
+
+
+## Series finales
+
+```{r}
+trafmensu_avant_septembre2001 <-
+  decomp_trafmensu_avant_sept2001$trend + sarima_avant_sept2001
+  
+trafmensu_apres_septembre2001 <- 
+  decomp_trafmensu_apres_sept2001$trend + sarima_apres_sept2001
+```
+
+

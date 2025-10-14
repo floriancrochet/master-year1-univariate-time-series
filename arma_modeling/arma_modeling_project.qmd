@@ -1,0 +1,461 @@
+---
+title: "TD2 Modélisation ARMA"
+author: "Arthur et Florian"
+format:
+  pdf:
+    toc: true
+    toc-title: Sommaire
+---
+
+\newpage
+# Chargement des packages nécessaires
+
+```{r}
+#| output: false
+
+library(tidyverse)
+library(forecast)
+```
+
+
+
+
+\newpage
+# I. Estimation de processus autorégressifs via les MCO
+
+```{r}
+#| output: false
+
+CAC40 <- read_csv2("data/CAC40_2010_2023.csv")
+```
+
+```{r}
+## Préparation des données
+
+CAC40 <- CAC40 |>
+  mutate(
+    Date = as_date(Date, format = "%d/%m/%Y"),
+    CAC40 = as.numeric(CAC40)
+  ) |>
+  rename(Cours = CAC40)
+```
+
+```{r}
+# Calcul du rendement en t, t-1 et t-2
+
+CAC40 <- CAC40 |>
+  mutate(
+    Rendement_t = log(Cours / lag(Cours)),
+    Rendement_t_1 = lag(Rendement_t),
+    Rendement_t_2 = lag(Rendement_t, 2)
+  )
+```
+
+```{r}
+# Graphiques des rendements
+
+colonnes <- c("Cours", "Rendement_t", "Rendement_t_1", "Rendement_t_2")
+
+graphique_rendement <- map(colonnes, function(i) {
+  CAC40 |>
+    ggplot(aes(x = Date, y = .data[[i]])) +
+    geom_line() +
+    theme_bw() +
+    ggtitle(i) +
+    theme(plot.title = element_text(hjust = 0.5))
+})
+
+walk(graphique_rendement, print)
+```
+
+```{r}
+# Transformation des colonnes en séries temporelles
+
+CAC40 <- CAC40 |>
+  mutate(across(Cours:Rendement_t_2, ~ ts(.x, start = c(2010, 1), frequency = 52)))
+```
+
+
+
+\newpage
+## I.1. Estimation des modèles AR(1) et AR(2) en utilisant les séries retardées comme régresseurs et en utilisant les MCO.
+
+```{r}
+# Modèle des MCO pour AR(1)
+
+lm_modele_ar1 <- lm(Rendement_t ~ Rendement_t_1, data = CAC40)
+
+summary(lm_modele_ar1)
+```
+
+La p-value de 0,02547 du test de Fisher indique que l'hypothèse nulle est rejetée au seuil de 5 %, ce qui signifie qu'au moins une variable est statistiquement significative.
+
+Ensuite, la p-value de 0,0255 du test de Student associé au coefficient de la partie autorégressive montre que l'hypothèse nulle est rejetée au seuil de 5 %. Le rendement décalé d'une période (Rendement_t_1) est donc statistiquement significatif au seuil de 5 %.
+
+```{r}
+# Modèle des MCO pour AR(2)
+
+lm_modele_ar2 <- lm(Rendement_t ~ Rendement_t_1 + Rendement_t_2, data = CAC40)
+
+summary(lm_modele_ar2)
+```
+
+La p-value de 0,07796 du test de Fisher indique que l'hypothèse nulle n'est pas rejetée au seuil de 5 %, ce qui signifie qu'aucune des variables testées n'est statistiquement significative à ce niveau de confiance.
+
+Le modèle AR(1) est donc le meilleur, compte tenu du test de Fisher et de la significativité du coefficient autorégressif.
+
+
+
+\newpage
+## I.2.  Estimation des modèles AR(1) et AR(2) en recourant directement à une fonction R disponible dans un des packages proposés.
+
+```{r}
+# Fonction arima pour estimer le modèle AR(1) (p = 1, d = 0, q = 0)
+
+fn_modele_ar1 <- Arima(CAC40$Rendement_t, order = c(1, 0, 0))
+
+fn_modele_ar1
+```
+
+Le modèle AR(1) à un AIC de -2872,37 et un BIC de -2858,8.
+
+```{r}
+# Fonction arima pour estimer le modèle AR(2) (p = 2, d = 0, q = 0)
+
+fn_modele_ar2 <- Arima(CAC40$Rendement_t, order = c(2, 0, 0))
+
+fn_modele_ar2
+```
+
+Le modèle AR(2) à un AIC de -2870,45 et un BIC de -2852,36.
+
+Le modèle AR(1), ayant un AIC et un BIC plus faibles, est donc le meilleur.
+
+
+
+## I.3. Conclusion
+
+En utilisant la méthode des MCO et le modèle ARIMA sur la série, nos résultats convergent vers la même conclusion : le modèle AR(1) est le meilleur. La méthode des MCO montre que ce modèle AR(1) donne un coefficient significatif, contrairement au modèle AR(2) (où l'hypothèse nulle du test de Fisher est acceptée). De plus, l'estimation avec le modèle ARIMA indique que ce modèle présente une meilleure qualité de prévision, avec des critères AIC et BIC plus faibles.
+
+
+
+
+\newpage
+# II. Modélisation ARMA du rendement d’un indice boursier
+
+## II.1.  Analyse complète de la série des rendements
+
+```{r}
+# 1. Graphique de la série en niveau
+graphique_niveau <- CAC40 |>
+  ggplot() +
+  aes(x = Date, y = Rendement_t) +
+  geom_line(na.rm = TRUE) +
+  theme_bw() +
+  ggtitle("Série en niveau") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+# 2. Graphique de la série en différence première
+graphique_difference <- CAC40 |>
+  mutate(diff_Rendement_t = c(NA, diff(Rendement_t))) |>
+  ggplot() +
+  aes(x = Date, y = diff_Rendement_t) +
+  geom_line(na.rm = TRUE) +
+  theme_bw() +
+  ggtitle("Série en différence première") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+# 3. Autocorrélogramme (ACF)
+graphique_acf <- CAC40$Rendement_t |>
+  ggAcf() +
+  ggtitle("Autocorrélogramme (ACF)") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+# 4. Autocorrélogramme partiel (PACF)
+graphique_pacf <- CAC40$Rendement_t |>
+  ggPacf() +
+  ggtitle("Autocorrélogramme partiel (PACF)") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+\newpage
+```{r}
+print(graphique_niveau)
+```
+
+Le premier graphique représente la série des rendements en niveau. On observe une volatilité globalement stable sur la période, avec cependant des pics marqués autour de 2020, probablement liés à un événement de marché, comme la crise du COVID-19. La série semble présenter des périodes de volatilité accrue et d'autres plus calmes. La stationnarité de la série n'est pas évidente à première vue.
+
+\newpage
+```{r}
+print(graphique_difference)
+```
+
+Le deuxième graphique montre la série en différence première, c'est-à-dire la variation des rendements d'une période à l'autre. On constate que la structure de la volatilité change légèrement : certaines périodes affichent une amplitude plus marquée, mais la tendance générale reste similaire, avec toujours un choc visible autour de 2020.
+
+\newpage
+```{r}
+print(graphique_acf)
+```
+
+L'autocorrélogramme montre des coefficients d'autocorrélation faibles.
+
+\newpage
+```{r}
+print(graphique_pacf)
+```
+
+L'autocorrélogramme partiel indique des coefficients proches de zéro, avec quelques valeurs significatives aux premiers retards.
+
+L'ACF et le PACF montrent peu d'autocorrélation persistante, indiquant un processus proche du bruit blanc.
+De plus, seuls quelques coefficients semblent significatifs, ce qui indique une faible dépendance aux valeurs passées pour la prédiction.
+Ce qui suggère un modèle ARMA de faible ordre (de faibles paramètres p et q).
+
+
+\newpage
+## II.2. Estimation des meilleurs modèles
+
+```{r}
+# Toutes les combinaisons de p et q
+TIBBLE <- expand_grid(p = factor(0:10), q = factor(0:2))
+
+# Critères AIC et BIC
+CRITERES <- TIBBLE |>
+  mutate(
+    modele = pmap(
+      list(p, q),
+      ~ Arima(na.omit(CAC40$Rendement_t), order = c(..1, 0, ..2))
+    ),
+    AIC = map_dbl(modele, AIC),
+    BIC = map_dbl(modele, BIC)
+  ) |>
+  select(-modele)
+
+CRITERES
+```
+
+
+\newpage
+### II.2.1. AIC
+
+```{r}
+# AIC minimum
+
+CRITERES_min_aic <- CRITERES |>
+  filter(AIC == min(AIC))
+
+CRITERES_min_aic
+```
+
+```{r}
+# Graphique représentant le AIC de chaque modèle ARMA(p, q)
+
+CRITERES |>
+  ggplot(aes(x = p, y = AIC, color = q, group = q)) +
+  geom_line() +
+  geom_point() +
+  geom_hline(
+    aes(yintercept = CRITERES_min_aic$AIC),
+    color = "black", linetype = "dashed"
+  ) +
+  geom_vline(
+    aes(xintercept = CRITERES_min_aic$p),
+    color = "black", linetype = "dashed"
+  ) +
+  geom_text(
+    data = CRITERES_min_aic,
+    aes(x = p, y = AIC, label = paste("AIC =", round(AIC, 2))),
+    vjust = -0.2, hjust = -0.01,
+    color = "black"
+  ) +
+  labs(
+    title = "AIC des modèles ARMA (p, q)",
+    x = "p",
+    y = "AIC",
+    color = "q"
+  ) +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+Le modèle qui minimise l'AIC est le modèle ARMA(1,0).
+
+```{r}
+# Modèle ARMA(1,0)
+
+arma_1_0 <- Arima(CAC40$Rendement_t, order = c(1, 0, 0))
+
+arma_1_0
+```
+
+
+\newpage
+### II.2.2. BIC
+
+```{r}
+# BIC minimum
+
+CRITERES_min_bic <- CRITERES |>
+  filter(BIC == min(BIC))
+
+CRITERES_min_bic
+```
+
+```{r}
+# Graphique représentant le BIC de chaque modèle ARMA(p, q)
+CRITERES |>
+  ggplot(aes(x = p, y = BIC, color = q, group = q)) +
+  geom_line() +
+  geom_point() +
+  geom_hline(
+    aes(yintercept = CRITERES_min_bic$BIC),
+    color = "black", linetype = "dashed"
+  ) +
+  geom_vline(
+    aes(xintercept = CRITERES_min_bic$p),
+    color = "black", linetype = "dashed"
+  ) +
+  geom_text(
+    data = CRITERES_min_bic,
+    aes(x = p, y = BIC, label = paste("BIC =", round(BIC, 2))),
+    vjust = -0.2, hjust = -0.01,
+    color = "black"
+  ) +
+  labs(
+    title = "BIC des modèles ARMA (p, q)",
+    x = "p",
+    y = "BIC",
+    color = "q"
+  ) +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+Le modèle qui minimise le BIC est le modèle ARMA(0,0).
+
+```{r}
+# Modèle ARMA(0,0)
+
+arma_0_0 <- Arima(CAC40$Rendement_t, order = c(0, 0, 0))
+
+arma_0_0
+```
+
+Le modèle choisi selon le critère AIC offre une meilleure qualité de prévision, car il pénalise moins la complexité que le critère BIC, notamment sur le lag de la moyenne mobile. En revanche, le critère BIC, en appliquant une pénalisation plus forte, limite le risque de surajustement aux erreurs passées.
+
+
+
+\newpage
+## II.3. Tests diagnostics
+
+### II.3.1. Meilleur modèle selon l'AIC : ARMA(1,0)
+
+#### II.3.1.1. Test de Ljung-Box
+
+```{r}
+# Test de Ljung-Box sur les résidus pour les 10 premiers lag
+
+resultat_Ljung_Box <- tibble(
+  lag = 1:10
+) %>%
+  mutate(
+    test_result = map(lag, ~ Box.test(residuals(arma_1_0), lag = .x, type = "Ljung-Box")),
+    X_squared = map_dbl(test_result, ~ .x$statistic),
+    df = map_dbl(test_result, ~ .x$parameter),
+    p_value = map_dbl(test_result, ~ .x$p.value),
+    significativite = ifelse(
+      p_value < 0.1,
+      "Rejet de H0",
+      "Non-rejet de H0"
+    )
+  ) %>%
+  select(lag, X_squared, df, p_value, significativite)
+
+resultat_Ljung_Box
+```
+
+Pour ces dix premiers lags, l'hypothèse nulle n'est pas rejetée, ce qui indique une absence d'autocorrélation significative des résidus au seuil de 10 %.
+Le modèle est donc probablement bien spécifié.
+
+#### II.3.1.2. Test de Bartlett
+
+```{r}
+# Fonction
+
+test_bartlett <- function(modele) {
+  # Taille de l'échantillon
+  T <- length(na.omit(CAC40$Rendement_t))
+  
+  # Coefficients du modèle
+  coefficients <- modele$coef[-length(modele$coef)]
+  
+  # Calcul de l'écart-type en utilisant la formule de Bartlett
+  ecart_type <- sqrt((1 / T) * (1 + 2 * sum(coefficients^2)))
+  
+  # Calcul de la statistique t pour chaque coefficient
+  t_stats <- coefficients / ecart_type
+  
+  # Valeur critique
+  valeur_critique <- 1.96
+  
+  # Tibble avec les résultats
+  resultats <- tibble(
+    coefficient = coefficients,
+    ecart_type = ecart_type,
+    t_stats = t_stats,
+    significativite = ifelse(
+      abs(t_stats) > valeur_critique,
+      "Significatif",
+      "Non significatif"
+    )
+  )
+  
+  return(resultats)
+}
+```
+
+```{r}
+# Test de Bartlett
+
+test_bartlett(arma_1_0)
+```
+
+La valeur absolue de la statistique de test étant supérieure à 1,96, l'hypothèse nulle est rejetée, ce qui indique que le coefficient est significatif au seuil de 5 %.
+
+
+\newpage
+### II.3.2. Meilleur modèle selon le BIC : ARMA(0,0)
+
+#### II.3.2.1. Test de Ljung-Box
+
+```{r}
+# Test de Ljung-Box sur les résidus pour les 10 premiers lag
+
+resultat_Ljung_Box <- tibble(
+  lag = 1:10
+) %>%
+  mutate(
+    test_result = map(lag, ~ Box.test(residuals(arma_0_0), lag = .x, type = "Ljung-Box")),
+    X_squared = map_dbl(test_result, ~ .x$statistic),
+    df = map_dbl(test_result, ~ .x$parameter),
+    p_value = map_dbl(test_result, ~ .x$p.value),
+    significativite = ifelse(
+      p_value < 0.05,
+      "Rejet de H0",
+      "Non-rejet de H0"
+    )
+  ) %>%
+  select(lag, X_squared, df, p_value, significativite)
+
+resultat_Ljung_Box
+```
+
+Le rejet de l'hypothèse nulle au premier lag dans un modèle ARMA(0,0) indique qu'il existe une autocorrélation significative des résidus, ce qui suggère que le modèle est mal spécifié.
+Un modèle ARMA(0,0) devrait capturer un bruit blanc, où les résidus sont indépendants et sans autocorrélation.
+Ajouter un terme autoregressif ou de moyennes mobiles d'ordre supérieur pourrait permettre de mieux capturer la structure temporelle des données.
+
+
+
+## II.4. Conclusion
+
+Le meilleur modèle est donc le modèle ARMA(1,0), soit AR(1).
+Ce modèle présente l'AIC minimal, il est bien spécifié selon le test de Ljung-Box, et le coefficient de la partie autorégressive est significatif selon le test de Bartlett.

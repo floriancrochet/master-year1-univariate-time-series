@@ -1,0 +1,644 @@
+---
+format: 
+  pdf:
+    documentclass: article
+    classoption: ["a4paper", "12pt", "fleqn"]
+    geometry: top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm
+    number-sections: true
+    toc: false  # Désactiver le sommaire automatique
+header-includes: |
+  \usepackage{hyperref}  % Liens cliquables
+  \hypersetup{
+    hidelinks  % Désactive complètement la mise en couleur des liens
+  }
+---
+\begin{titlepage}
+    \begin{center}
+        {\LARGE \textbf{Séries temporelles univariées}}\\
+        \vspace{0.5cm}
+        {\Large M1 ECAP -- TD1 -- Année 2024/2025}\\
+        
+        \vspace{2cm}
+        
+        {\Large \textbf{TD1 : Processus stochastiques}}\\
+        \vspace{0.5cm}
+        \textit{Responsable d'enseignement : Benoît SÉVI}\\
+        \href{mailto:benoit.sevi@univ-nantes.fr}{benoit.sevi@univ-nantes.fr}\\
+        
+        \vspace{1.5cm}
+        
+        {\large \textbf{DAËRON Djayan, CROCHET Florian}}
+        
+        \vfill
+        
+        {\large \today}
+        
+    \end{center}
+\end{titlepage}
+
+\begingroup
+\hypersetup{linkcolor=black}
+\tableofcontents
+\endgroup
+
+
+
+\newpage
+# Chargement des packages nécessaires
+
+```{r}
+#| output: false
+
+library(tseries)
+library(forecast) # utilisée
+library(FinTS)
+library(Metrics)
+library(TSA)
+
+library(ggplot2) # utilisée
+library(purrr) # utilisée
+```
+
+\newpage
+# Exercice 1 : Stationnarité de processus ARMA
+
+Pour chaque processus ci-dessous, il est demandé d'écrire le processus sous la forme d'un polynôme avec l'opérateur retard $L$, puis d'établir l'équation caractéristique et enfin d'indiquer si le processus est stationnaire ou non.
+
+
+## Équation 1
+
+\begin{enumerate}
+
+    \item[] MA(1) : $Y_t = \eta_t + 0,8 \eta_{t-1}$
+    
+    \vspace{0.3cm}
+    \noindent \textbf{Réponse :}
+    \begin{alignat*}{4}
+    &\qquad& Y_t &= \eta_t + 0,8 \eta_{t-1} \\
+    &\Leftrightarrow&& Y_t = \eta_t + 0,8 L \eta_t \\
+    &\Leftrightarrow&& Y_t = \left(1+0,8L\right) \eta_t
+    \end{alignat*}
+
+   \noindent Nous effectuons le développement en introduisant l'opérateur retard $L$ pour répondre à la consigne mais, dès le départ, nous pouvons conclure que le processus MA(1) est stationnaire au sens faible car c'est toujours le cas puisque la moyenne, la variance et la fonction d'autocovariance du processus sont constantes dans le temps. \\ \\ \\ \\
+
+\end{enumerate}
+
+
+
+## Équation 2
+
+\begin{enumerate}
+
+    % Question 2
+    \item[] MA(2) : $Y_t = \eta_t + 0,6 \eta_{t-1} - 0,3 \eta_{t-2}$
+    
+    \vspace{0.3cm}
+    \noindent \textbf{Réponse :}
+    \begin{alignat*}{4}
+    &\qquad& Y_t &= \eta_t + 0,6 \eta_{t-1} - 0,3 \eta_{t-2} \\
+    &\Leftrightarrow&& Y_t = \eta_t + 0,6 L \eta_t - 0,3 L^2 \eta_t \\
+    &\Leftrightarrow&& Y_t = \left( 1 + 0,6 L - 0,3 L^2 \right) \eta_t
+    \end{alignat*}
+
+    \noindent Nous effectuons le développement en introduisant l'opérateur retard $L$ pour répondre à la consigne mais, dès le départ, nous pouvons conclure que le processus MA(2) est stationnaire au sens faible car c'est toujours le cas puisque la moyenne, la variance et la fonction d'autocovariance du processus sont constantes dans le temps. \newpage
+
+\end{enumerate}
+
+
+
+## Équation 3
+
+\begin{enumerate}
+
+    % Question 3
+    \item[] AR(1) : $Y_t = 0,9 Y_{t-1} + \eta_t$
+
+    \vspace{0.3cm}
+    \noindent \textbf{Réponse :}
+    \begin{alignat*}{4}
+    &\qquad& Y_t &= 0,9 Y_{t-1} + \eta_t \\
+    &\Leftrightarrow&& Y_t - 0,9 Y_{t-1} = \eta_t \\
+    &\Leftrightarrow&& Y_t - 0,9L Y_t = \eta_t \\
+    &\Leftrightarrow&& \left( 1 - 0,9 L \right) Y_t = \eta_t
+    \end{alignat*}
+
+    \noindent Nous voyons directement que $\Phi = 0.9$, ce qui, en valeur absolue, est inférieur à 1. Par conséquent, le processus est stationnaire au sens faible. Cependant, nous allons tout de même écrire l'équation caractéristique et la résoudre :
+    \[
+    \ \ \ \ \ z - 0,9 = 0
+    \]
+    La racine est
+    \[
+    \ \ \ \ \ z = 0,9
+    \]
+    et comme $\left\lvert 0,9 \right\lvert < 1$, le processus est faiblement stationnaire. \\ \\ \\ \\
+
+\end{enumerate}
+
+
+
+## Équation 4
+
+\begin{enumerate}
+
+
+    % Question 4
+    \item[] AR(2) : $Y_t = 0,9 Y_{t-1} - 0,7 Y_{t-2} + \eta_t$
+    
+    \vspace{0.3cm}
+    \noindent \textbf{Réponse :}
+    \begin{alignat*}{4}
+    &\qquad& Y_t &= 0,9 Y_{t-1} - 0,7 Y_{t-2} + \eta_t \\
+    &\Leftrightarrow&& Y_t - 0,9 Y_{t-1} + 0,7 Y_{t-2} = \eta_t \\
+    &\Leftrightarrow&& Y_t - 0,9 L Y_t + 0,7 L^2 Y_t = \eta_t \\
+    &\Leftrightarrow&& \left(1 - 0,9 L + 0,7 L^2\right) Y_t = \eta_t
+    \end{alignat*}
+    La forme caractéristique de cette équation est la suivante :
+    \[
+    \ \ \ \ \ z^2 - 0,9z + 0,7 = 0
+    \]
+    Les racines sont
+    \[
+    \ \ \ \ \ z = 0,45 \pm 0,705337i
+    \]
+    et comme $\left\lvert \sqrt{0,45^2 + (\pm 0,705337)^2} \right\lvert \simeq \left\lvert 0,8 \right\lvert < 1$, le processus est faiblement stationnaire. \\ \\ \\ \\
+
+\end{enumerate}
+
+
+
+## Équation 5
+
+\begin{enumerate}
+
+    \item[] ARMA(1,1) : $Y_t = 0,8 Y_{t-1} + \eta_t - 0,7 \eta_{t-1}$
+    
+    \vspace{0.3cm}
+    \noindent \textbf{Réponse :}
+    \begin{alignat*}{4}
+    &\qquad& Y_t &= 0,8 Y_{t-1} + \eta_t - 0,7 \eta_{t-1} \\
+    &\Leftrightarrow&& Y_t - 0,8 Y_{t-1} = \eta_t - 0,7 \eta_{t-1} \\
+    &\Leftrightarrow&& Y_t - 0,8 L Y_t = \eta_t - 0,7 L \eta_t \\
+    &\Leftrightarrow&& \left( 1 - 0,8 L \right) Y_t =  MA + \eta_t
+    \end{alignat*}
+
+    \noindent Nous voyons directement que $\Phi = 0.8$, ce qui, en valeur absolue est inférieur à 1. Par conséquent, le processus est stationnaire au sens faible. Cependant, nous allons tout de même écrire l'équation caractéristique et la résoudre :
+    \[
+    \ \ \ \ \ z - 0,8 = 0
+    \]
+    La racine est
+    \[
+    \ \ \ \ \ z = 0,8
+    \]
+    et comme $\left\lvert 0,8 \right\lvert < 1$, le processus est faiblement stationnaire. \\ \\ \\ \\
+
+\end{enumerate}
+
+
+
+## Équation 6
+
+\begin{enumerate}
+
+    \item[] ARMA(3,2) : $Y_t = 2,5 Y_{t-1} - 0,5 Y_{t-2} - Y_{t-3} + \eta_t + \eta_{t-1} + 2 \eta_{t-2}$
+    
+    \vspace{0.3cm}
+    \noindent \textbf{Réponse :}
+    \begin{alignat*}{4}
+    &\qquad& Y_t &= 2,5 Y_{t-1} - 0,5 Y_{t-2} - Y_{t-3} + \eta_t + \eta_{t-1} + 2 \eta_{t-2} \\
+    &\Leftrightarrow&& Y_t - 2,5 Y_{t-1} + 0,5 Y_{t-2} + Y_{t-3} = \eta_t + \eta_{t-1} + 2 \eta_{t-2} \\
+    &\Leftrightarrow&& Y_t - 2,5 L Y_t + 0,5 L^2 Y_t + L^3 Y_t = \eta_t + L \eta_t + 2 L^2 \eta_t \\
+    &\Leftrightarrow&& \left(1 - 2,5L + 0,5L^2 + L^3 \right) Y_t = MA + \eta_t
+    \end{alignat*}
+    La forme caractéristique de cette équation est la suivante :
+    \[
+    \ \ \ \ \ z^3 - 2,5z^2 + 0,5z + 1 = 0
+    \]
+    Les racines sont 
+    \[
+    \ \ \ \ \ z_1 = -0,5 \\
+    \ \ \ \ \ z_2 = 1 \\
+    \ \ \ \ \ z_3 = 2
+    \]
+    et comme $\left\lvert 2 \right\lvert \not< 1$, c'est-à-dire qu'au moins l'une des racines de la forme caractéristique n'est pas inférieure à 1 en valeur absolue, le processus n'est pas faiblement stationnaire.
+
+\end{enumerate}
+
+
+
+
+\newpage
+# Exercice 2
+
+## Paramètres généraux
+
+```{r}
+set.seed(983) # Graine pour assurer la reproductibilité
+
+T <- 1000 # Echantillon de 1000 observations
+Yt <- ts(numeric(T)) # Processus stochastique
+epsilon <- rnorm(T) # Bruit blanc ~ N(0,1)
+```
+
+Nous avons testé différentes graines aléatoires pour évaluer la robustesse de notre approche. Les résultats étaient similaires, confirmant la direction et l’intensité des coefficients d’autocorrélation. Certains coefficients variaient légèrement en termes de significativité selon la graine utilisée, suggérant une légère sensibilité aux variations aléatoires. Toutefois, ces écarts étant minimes, nous n’avons pas jugé pertinent de répéter l’exercice 2 avec plusieurs graines.
+
+\newpage
+## $AR(1) : Y_t = 0,65 Y_{t-1} + \epsilon_t$
+
+### Coefficients
+
+```{r}
+Y <- Yt
+Phi <- 0.65
+```
+
+
+### Simulation du processus
+
+```{r}
+for (t in 2:T) {
+  Y[t] <- Phi * Y[t - 1] + epsilon[t]
+}
+```
+
+
+### Représentations
+
+```{r}
+# Représentations
+representations <- list(
+  list(fonction = autoplot, titre = "Graphique de l'échantillon"),
+  list(fonction = ggAcf, titre = "Autocorrélogramme de l'ACF"),
+  list(fonction = ggPacf, titre = "Autocorrélogramme partiel de la PACF")
+)
+
+# Graphiques
+graphiques <- representations |>
+  map(
+    ~ .x$fonction(Y) +
+      ggtitle(.x$titre) +
+      theme_bw() +
+      theme(plot.title = element_text(hjust = 0.5))
+  )
+```
+
+\newpage
+```{r}
+# Graphique de l'échantillon
+graphiques[[1]]
+```
+
+
+```{r}
+# Affichage de l'ACF
+graphiques[[2]]
+```
+
+Le coefficient d'autocorrélation est positif et décroît exponentiellement vers 0.  
+Il reste significativement différent de zéro sur quelques retards avant de se stabiliser dans l'intervalle de confiance.
+
+\newpage
+```{r}
+# Affichage de la PACF
+graphiques[[3]]
+```
+
+Le coefficient d'autocorrélation est positif.  
+Il est significativement différent de zéro uniquement pour le premier retard, mais ne l'est plus à partir du deuxième retard.
+
+Ces représentations sont donc conformes avec ce qui est attendu.
+
+
+\newpage
+## $AR(1) : Y_t = -0,65 Y_{t-1} + \epsilon_t$
+
+### Coefficients
+
+```{r}
+Y <- Yt
+Phi <- -0.65
+```
+
+
+### Simulation du processus
+
+```{r}
+for (t in 2:T) {
+  Y[t] <- Phi * Y[t - 1] + epsilon[t]
+}
+```
+
+
+### Représentations
+
+```{r}
+# Fonctions à afficher
+representations <- list(
+  list(fonction = autoplot, titre = "Graphique de l'échantillon"),
+  list(fonction = ggAcf, titre = "Autocorrélogramme de l'ACF"),
+  list(fonction = ggPacf, titre = "Autocorrélogramme partiel de la PACF")
+)
+
+# Affichage
+graphiques <- representations |>
+  map(
+    ~ .x$fonction(Y) +
+      ggtitle(.x$titre) +
+      theme_bw() +
+      theme(plot.title = element_text(hjust = 0.5))
+  )
+```
+
+\newpage
+```{r}
+# Graphique de l'échantillon
+graphiques[[1]]
+```
+
+
+```{r}
+# Affichage de l'ACF
+graphiques[[2]]
+```
+
+Le coefficient d'autocorrélation alterne entre valeurs négatives et positives, tout en décroissant exponentiellement vers 0.  
+Il reste significativement différent de zéro sur quelques retards avant de se stabiliser dans l'intervalle de confiance.
+
+\newpage
+```{r}
+# Affichage de la PACF
+graphiques[[3]]
+```
+
+Le coefficient d'autocorrélation est négatif.  
+Il est significativement différent de zéro uniquement pour le premier retard, mais ne l'est plus à partir du deuxième retard.
+
+Ces représentations sont donc conformes avec ce qui est attendu.
+
+
+\newpage
+## $AR(2) : Y_t = 0,5 Y_{t-1} - 0,4 Y_{t-2} + \epsilon_t$
+
+### Coefficients
+
+```{r}
+Y <- Yt
+Phi1 <- -0.5
+Phi2 <- -0.4
+```
+
+
+### Simulation du processus
+
+```{r}
+for (t in 3:T) {
+  Y[t] <- Phi1 * Y[t - 1] + Phi2 * Y[t - 2] + epsilon[t]
+}
+```
+
+
+### Représentations
+
+```{r}
+# Fonctions à afficher
+representations <- list(
+  list(fonction = autoplot, titre = "Graphique de l'échantillon"),
+  list(fonction = ggAcf, titre = "Autocorrélogramme de l'ACF"),
+  list(fonction = ggPacf, titre = "Autocorrélogramme partiel de la PACF")
+)
+
+# Affichage
+graphiques <- representations |>
+  map(
+    ~ .x$fonction(Y) +
+      ggtitle(.x$titre) +
+      theme_bw() +
+      theme(plot.title = element_text(hjust = 0.5))
+  )
+```
+
+\newpage
+```{r}
+# Graphique de l'échantillon
+graphiques[[1]]
+```
+
+
+```{r}
+# Affichage de l'ACF
+graphiques[[2]]
+```
+
+Le coefficient d'autocorrélation décroît exponentiellement vers 0.  
+Il reste significativement différent de zéro sur trois retards avant de se stabiliser dans l'intervalle de confiance.
+
+\newpage
+```{r}
+# Affichage de la PACF
+graphiques[[3]]
+```
+
+Le coefficient d'autocorrélation est négatif.  
+Il est significativement différent de zéro jusqu'au deuxième retard, mais ne l'est plus à partir du troisième retard.
+
+Ces représentations sont donc conformes avec ce qui est attendu.
+
+
+\newpage
+## $MA(1) : Y_t = \epsilon_t - 0,8 \epsilon_{t-1}$
+
+### Coefficients
+
+```{r}
+Y <- Yt
+phi <- -0.8
+```
+
+
+### Simulation du processus
+
+```{r}
+for (t in 2:T) {
+  Y[t] <- epsilon[t] + phi * epsilon[t - 1]
+}
+```
+
+
+### Représentations
+
+```{r}
+# Fonctions à afficher
+representations <- list(
+  list(fonction = autoplot, titre = "Graphique de l'échantillon"),
+  list(fonction = ggAcf, titre = "Autocorrélogramme de l'ACF"),
+  list(fonction = ggPacf, titre = "Autocorrélogramme partiel de la PACF")
+)
+
+# Affichage
+graphiques <- representations |>
+  map(
+    ~ .x$fonction(Y) +
+      ggtitle(.x$titre) +
+      theme_bw() +
+      theme(plot.title = element_text(hjust = 0.5))
+  )
+```
+
+\newpage
+```{r}
+# Graphique de l'échantillon
+graphiques[[1]]
+```
+
+
+```{r}
+# Affichage de l'ACF
+graphiques[[2]]
+```
+
+Le coefficient d'autocorrélation est négatif.  
+Il est significativement différent de zéro pour le retard 1 et reste dans l'intervalle de confiance ensuite.
+
+\newpage
+```{r}
+# Affichage de la PACF
+graphiques[[3]]
+```
+
+Le coefficient d'autocorrélation est négatif.  
+Il est significativement différent de zéro et décroît exponentiellement vers 0 sur quelques retards.
+
+Ces représentations sont donc conformes avec ce qui est attendu.
+
+
+\newpage
+## $MA(2) : Y_t = \epsilon_t + 0,5 \epsilon_{t-1} + 0,4 \epsilon_{t-2}$
+
+### Coefficients
+
+```{r}
+Y <- Yt
+phi1 <- 0.5
+phi2 <- 0.4
+```
+
+
+### Simulation du processus
+
+```{r}
+for (t in 3:T) {
+  Y[t] <- epsilon[t] + phi1 * epsilon[t - 1] + phi2 * epsilon[t - 2]
+}
+```
+
+
+### Représentations
+
+```{r}
+# Fonctions à afficher
+representations <- list(
+  list(fonction = autoplot, titre = "Graphique de l'échantillon"),
+  list(fonction = ggAcf, titre = "Autocorrélogramme de l'ACF"),
+  list(fonction = ggPacf, titre = "Autocorrélogramme partiel de la PACF")
+)
+
+# Affichage
+graphiques <- representations |>
+  map(
+    ~ .x$fonction(Y) +
+      ggtitle(.x$titre) +
+      theme_bw() +
+      theme(plot.title = element_text(hjust = 0.5))
+  )
+```
+
+\newpage
+```{r}
+# Graphique de l'échantillon
+graphiques[[1]]
+```
+
+
+```{r}
+# Affichage de l'ACF
+graphiques[[2]]
+```
+
+Le coefficient d'autocorrélation est positif.  
+Il est significativement différent de zéro jusqu'au retard 2 et reste dans l'intervalle de confiance ensuite.
+
+\newpage
+```{r}
+# Affichage de la PACF
+graphiques[[3]]
+```
+
+Le coefficient d'autocorrélation décroît exponentiellement vers 0.
+
+Ces représentations sont donc conformes avec ce qui est attendu.
+
+
+\newpage
+## $ARMA(1,1) : Y_t = 0,9 Y_{t-1} + \epsilon_t + 0,8 \epsilon_{t-1}$
+
+### Coefficients
+
+```{r}
+Y <- Yt
+Phi <- 0.9
+phi <- 0.8
+```
+
+
+### Simulation du processus
+
+```{r}
+for (t in 2:T) {
+  Y[t] <- Phi * Y[t - 1] + epsilon[t] + phi * epsilon[t - 1]
+}
+```
+
+
+### Représentations
+
+```{r}
+# Fonctions à afficher
+representations <- list(
+  list(fonction = autoplot, titre = "Graphique de l'échantillon"),
+  list(fonction = ggAcf, titre = "Autocorrélogramme de l'ACF"),
+  list(fonction = ggPacf, titre = "Autocorrélogramme partiel de la PACF")
+)
+
+# Affichage
+graphiques <- representations |>
+  map(
+    ~ .x$fonction(Y) +
+      ggtitle(.x$titre) +
+      theme_bw() +
+      theme(plot.title = element_text(hjust = 0.5))
+  )
+```
+
+\newpage
+```{r}
+# Graphique de l'échantillon
+graphiques[[1]]
+```
+
+
+```{r}
+# Affichage de l'ACF
+graphiques[[2]]
+```
+
+Le coefficient d'autocorrélation est positif.  
+Il est significativement différent de zéro et décroit de façon exponentielle sur plusieurs retards avant de se stabiliser dans l'intervalle de confiance.
+
+\newpage
+```{r}
+# Affichage de la PACF
+graphiques[[3]]
+```
+
+Le coefficient d'autocorrélation est significativement différent de zéro et décroit de façon exponentielle sur quelques retards avant de se stabiliser dans l'intervalle de confiance.
+
+Ces représentations sont donc conformes avec ce qui est attendu.
