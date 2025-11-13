@@ -1,4 +1,4 @@
-# TD3 – Seasonal Time Series Modeling  
+# Seasonal Time Series Modeling  
 *Simulation and estimation of SARMA/SARIMA models with seasonal behavior in R.*
 
 ---
@@ -123,16 +123,18 @@ TD3_Saisonnalite/
 
 ## 📜 License
 This project is released under the **MIT License**.  
-© 2025 Florian Crochet, Isaline Hervé
+© 2025 Isaline Hervé and Florian Crochet
 
 ---
 
-## 👤 Author
-**Florian Crochet**  
-*Econometrics & Statistics Student | Time Series & Financial Modeling*  
-📫 [LinkedIn](> À compléter) | [Email](> À compléter) | [Portfolio](> À compléter)
+## 👤 Authors
+**Isaline Hervé**  
+[GitHub Profile](https://github.com/Isahrv)  
 
-Collaborator: **Isaline Hervé**
+**Florian Crochet**  
+[GitHub Profile](https://github.com/floriancrochet)
+
+*Master 1 – Econometrics & Statistics, Applied Econometrics Track*  
 
 ---
 
