@@ -99,16 +99,19 @@ The report includes analytical and simulated results for:
 ---
 
 ## 📜 License
-> À compléter
+This project is released under the **MIT License**.  
+© 2025 Djayan Daëron and Florian Crochet
 
 ---
 
-## 👤 Author
+## 👤 Authors
+**Djayan Daëron**  
+[GitHub Profile](https://github.com/Djayan-D)  
+
 **Florian Crochet**  
-*Econometrics & Statistics Student – M1 ECAP 2024–2025*  
-📫 [Email](mailto:>À compléter)  
-👥 Collaborator: Djayan Daëron  
-📘 Supervisor: Benoît Sévi ([benoit.sevi@univ-nantes.fr](mailto:benoit.sevi@univ-nantes.fr))
+[GitHub Profile](https://github.com/floriancrochet)
+
+*Master 1 – Econometrics & Statistics, Applied Econometrics Track*  
 
 ---
 
