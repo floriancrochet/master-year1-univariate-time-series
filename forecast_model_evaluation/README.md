@@ -108,21 +108,17 @@ TD5_HOUSSAIS_CROCHET/
 
 ## 📜 License
 This project is released under the **MIT License**.  
-© 2025 Florian Crochet, Rémi Houssais
+© 2025 Rémi Houssais and Florian Crochet
 
 ---
 
 ## 👤 Authors
-**Florian Crochet**  
-*Econometrics & Statistics Student | M1 ECAP, Université de Nantes*  
-📫 > À compléter (email or LinkedIn)
-
 **Rémi Houssais**  
-*Econometrics & Statistics Student | M1 ECAP, Université de Nantes*  
-📫 > À compléter (email or LinkedIn)
+ 
+**Florian Crochet**  
+[GitHub Profile](https://github.com/floriancrochet)
 
-**Supervisor:**  
-Benoît Sévi – [benoit.sevi@univ-nantes.fr](mailto:benoit.sevi@univ-nantes.fr)
+*Master 1 – Econometrics & Statistics, Applied Econometrics Track* 
 
 ---
 
