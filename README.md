@@ -1,4 +1,4 @@
-# Time Series Modeling and Forecasting Toolkit  
+# Univariate Time Series
 *A unified academic toolkit for econometric analysis, simulation, and forecasting of univariate time series.*
 
 ---
