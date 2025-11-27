@@ -1,5 +1,5 @@
-# Univariate Time Series
-*A unified academic toolkit for econometric analysis, simulation, and forecasting of univariate time series.*
+# Univariate Time Series Projects  
+*A collection of academic projects focused on econometric analysis, simulation, and forecasting of univariate time series.*
 
 ---
 
