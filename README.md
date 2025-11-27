@@ -154,8 +154,22 @@ This project is released under the **MIT License**.
 ---
 
 ## 👤 Author
+**Djayan Daëron**  
+[GitHub Profile](https://github.com/Djayan-D)  
+
+**Arthur Ernoult de La Provôté**  
+[GitHub Profile](https://github.com/ArthurEDLP)  
+
+**Isaline Hervé**  
+[GitHub Profile](https://github.com/Isahrv)  
+
+**Achille Marteret**  
+
+**Rémi Houssais**  
+
 **Florian Crochet**  
-GitHub: https://github.com/floriancrochet  
+[GitHub Profile](https://github.com/floriancrochet)
+
 *Master 1 – Econometrics & Statistics, Applied Econometrics Track*
 
 ---
