@@ -1,1 +1,164 @@
-# master1-ecap-univariate-time-series
+# Time Series Modeling and Forecasting Toolkit  
+*A unified academic toolkit for econometric analysis, simulation, and forecasting of univariate time series.*
+
+---
+
+## 📘 Overview
+This project consolidates multiple academic works developed within the **M1 ECAP Econometrics & Statistics** program at the University of Nantes (2024–2025). It provides a comprehensive framework for **modeling, simulating, diagnosing, and forecasting financial and economic time series** using rigorous econometric methodology.
+
+It integrates applied studies on:
+- AR, ARMA, SARMA, and SARIMA modeling
+- Non-stationarity and unit root detection
+- Stochastic process simulation
+- Forecast evaluation using statistical tests
+
+All components emphasize **reproducibility, methodological clarity, and empirical validation**.
+
+**Objectives**
+- Model and analyze univariate time series using ARMA-family models  
+- Simulate stochastic processes and assess stationarity conditions  
+- Detect and interpret unit roots and spurious regressions  
+- Evaluate forecasts using formal econometric tests  
+- Compare competing model specifications using information criteria and diagnostics  
+
+> This README synthesizes all provided project documentations into a single unified description.
+
+---
+
+## ⚙️ Features
+- Estimation and comparison of AR and ARMA models (OLS and Maximum Likelihood)  
+- Seasonal modeling with SARMA and SARIMA structures  
+- Monte Carlo simulation of stochastic processes  
+- Stationarity testing (ADF, KPSS, Dickey–Fuller) and spurious regression detection  
+- Rolling-window forecasting and benchmark comparison  
+- Forecast evaluation with Mincer–Zarnowitz and Diebold–Mariano tests  
+- Model comparison via AIC and BIC  
+- Residual diagnostics using ACF, PACF, and Ljung–Box tests  
+- Visualization of trends, seasonality, and autocorrelation patterns  
+
+> Functional coverage includes financial indices (CAC40), wheat futures, U.S. GDP, gas consumption, and airport traffic data.
+
+---
+
+## 🧰 Tech Stack
+**Language:** R  
+**Libraries:**  
+- tidyverse  
+- forecast  
+- tseries  
+- urca  
+- astsa  
+- ggplot2  
+- FinTS  
+- Metrics  
+- TSA  
+- purrr  
+- openxlsx  
+- readxl  
+- lmtest  
+- sandwich  
+
+> All analyses were implemented using R and R Markdown for complete reproducibility.
+
+---
+
+## ⚙️ Installation
+Clone the repository:
+
+```bash
+git clone https://github.com/À compléter.git
+cd À compléter
+```
+
+Install required packages in R:
+
+```r
+install.packages(c(
+  "tidyverse", "forecast", "tseries", "urca", "astsa", "ggplot2",
+  "FinTS", "Metrics", "TSA", "purrr", "openxlsx", "readxl",
+  "lmtest", "sandwich"
+))
+```
+
+> Repository name and structure: > À compléter
+
+---
+
+## 📚 Usage Example
+
+```r
+library(forecast)
+
+# Example AR(1) estimation
+model_ar1 <- Arima(series, order = c(1, 0, 0))
+forecast(model_ar1, h = 5)
+
+# Stationarity testing
+adf.test(series)
+kpss.test(series)
+
+# Seasonal SARIMA estimation
+model_sarima <- Arima(series,
+  order = c(2,0,0),
+  seasonal = list(order = c(0,2,4), period = 12)
+)
+```
+
+Examples include ARMA modeling of CAC40 returns, SARIMA modeling of gas consumption, and rolling forecasts for wheat futures.
+
+---
+
+## 📂 Project Structure
+
+```
+time-series-toolkit/
+│
+├── data/                 # Financial and economic datasets
+├── code/                 # R scripts and R Markdown analyses
+├── reports/              # Rendered PDF reports
+├── supports/             # Course material and documentation
+└── README.md
+```
+
+> Exact folder naming: > À compléter  
+> Logical structure reflects consistency across all subprojects.
+
+---
+
+## 📊 Results
+Key consolidated findings:
+- AR(1) consistently outperforms higher-order AR models in CAC40 data.  
+- AIC generally selects ARMA(1,0) while BIC may favor simpler models.  
+- Unit root presence confirmed in U.S. GDP series, highlighting trend non-stationarity.  
+- Spurious regression simulations show rejection rates above 80%.  
+- Seasonal models significantly improve forecasts in gas consumption and airport traffic data.  
+- Best forecasting performance observed for rolling AR(1) models with 3-year windows.  
+- Random walk benchmarks are systematically rejected.
+
+> Diagnostics confirm robust specification through residual whiteness and statistical significance.
+
+---
+
+## 🧠 References
+- Hyndman & Athanasopoulos, *Forecasting: Principles and Practice*  
+- Hamilton, *Time Series Analysis*  
+- Wooldridge, *Introductory Econometrics: A Modern Approach*  
+- Sévi, B. (2024–2025). *Séries temporelles univariées – M1 ECAP*
+
+---
+
+## 📜 License
+This project is released under the **MIT License**.  
+© 2025 Florian Crochet
+
+---
+
+## 👤 Author
+**Florian Crochet**  
+GitHub: https://github.com/floriancrochet  
+*Master 1 – Econometrics & Statistics, Applied Econometrics Track*
+
+---
+
+## 💬 Acknowledgments
+Special thanks to **Benoît Sévi** for academic supervision and to all academic collaborators involved across the different project modules. Appreciation is also extended to the R open-source community for providing essential analytical tools.
