@@ -1,107 +1,114 @@
 # ARMA Modeling  
-*A practical study of autoregressive and moving average models applied to financial time series.*
+*Analyze and forecast financial time series using autoregressive and moving average models*
 
 [**ARMA Modeling Report**](https://drive.google.com/file/d/1f8RKfl2IlKWku6SDho6zXx6anQDJXRU7/view?usp=drive_link)
 
 ---
 
-## 📘 Overview
-This project focuses on the **estimation and comparison of AR and ARMA models** for the CAC40 stock index.  
-It was conducted as part of the **M1 ECAP 2024–2025 Econometrics course**, under the supervision of **Benoît Sévi**, and developed by **Arthur Ernoult and Florian Crochet**.
-
+## 🎯 Overview
 **Objectives**
-- Estimate autoregressive models (AR(1), AR(2)) using both OLS and maximum likelihood  
-- Compare model performance via AIC and BIC information criteria  
-- Identify the best ARMA specification for financial return series  
-- Conduct diagnostic tests (Ljung–Box, Bartlett) to validate model adequacy  
+- Estimate autoregressive models via OLS and maximum likelihood
+- Compare model performance systematically using AIC and BIC
+- Identify the optimal ARMA specification for financial return series
+- Conduct residual diagnostics to validate model adequacy
+
+---
+
+## 🗄️ Data
+- **Source:** Proprietary dataset (`CAC40_2010_2023.csv`)
+- **Target Variable:** CAC40 index returns (`Rendement_t`)
+- **Key Predictors / Features:** Lagged returns (`Rendement_t_1`, `Rendement_t_2`)
+- **Preprocessing:** Computed logarithmic returns and first differences to achieve stationarity
+- **Data Availability:** Provided in `data/`
+
+---
+
+## 🧠 Methodology
+- **Theoretical Approach:** Box-Jenkins ARMA modeling framework
+- **Mathematical Framework:** Ordinary Least Squares (OLS) and Maximum Likelihood Estimation (ARIMA)
+- **Evaluation Strategy:** Information criteria comparison (AIC, BIC) and residual testing
 
 ---
 
 ## ⚙️ Features
-- Estimation of AR(1) and AR(2) models using both regression and `Arima()` functions  
-- Automated ARMA(p, q) model comparison based on AIC and BIC  
-- Visualization of returns, autocorrelation (ACF), and partial autocorrelation (PACF)  
-- Diagnostic tests on residuals to assess model specification  
-- Full reproducibility using R and tidyverse tools  
+- **Estimate Models:** Compute AR(1) and AR(2) models via regression and maximum likelihood functions
+- **Compare Criteria:** Automate ARMA model selection based on AIC and BIC minimization
+- **Visualize Autocorrelation:** Plot returns, ACF, and PACF to assess stationarity
+- **Assess Diagnostics:** Conduct statistical tests on residuals to confirm model specification
 
 ---
 
 ## 🧰 Tech Stack
-**Language:** R  
-**Libraries:** `tidyverse`, `forecast`  
+- **Language:** R
+- **Data Manipulation:** tidyverse
+- **Modeling / ML:** forecast
+- **Visualization:** ggplot2
 
 ---
 
-## ⚙️ Installation
-Clone the repository and open the R project file:
+## 📦 Installation
+Clone the repository and install dependencies:
 
 ```bash
-git clone https://github.com/<your-username>/TD2_ARMA_Modeling.git
-cd TD2_ARMA_Modeling
-```
-
-Make sure the following R packages are installed:
-
-```r
-install.packages(c("tidyverse", "forecast"))
+git clone https://github.com/floriancrochet/master-year1-univariate-time-series.git
+cd master-year1-univariate-time-series/arma_modeling
+Rscript -e 'install.packages(c("tidyverse", "forecast"))'
 ```
 
 ---
 
-## 📚 Usage Example
+## 💻 Usage Example
 
+### Reproducing the Analysis / Execution Pipeline
 ```r
-# Load dataset
+library(tidyverse)
+library(forecast)
+
 CAC40 <- read_csv2("data/CAC40_2010_2023.csv")
-
-# Estimate AR(1) model
 lm_modele_ar1 <- lm(Rendement_t ~ Rendement_t_1, data = CAC40)
-summary(lm_modele_ar1)
-
-# Compare ARMA(p, q) models
 arma_1_0 <- Arima(CAC40$Rendement_t, order = c(1, 0, 0))
-arma_0_0 <- Arima(CAC40$Rendement_t, order = c(0, 0, 0))
 ```
-
-Additional examples and graphs are available in the R Markdown source.
 
 ---
 
 ## 📂 Project Structure
 
-```
-TD2_ARMA_Modeling/
+```text
+arma_modeling/
 │
-├── data/                 # CAC40_2010_2023.csv (weekly index data)
-├── code/                 # R scripts for AR and ARMA modeling
-├── TD2_ERNOUL_CROCHET.pdf  # Final report with results and interpretations
-├── Support2_Series_temporelles_univariees_M1ECAP_2024-2025.pdf  # Course instructions
+├── data/                      # Raw CAC40 dataset
+├── report/                    # Compiled analysis report
+├── arma_modeling_project.qmd  # Source code for ARMA modeling
 └── README.md
 ```
 
 ---
 
-## 📊 Results
-Main findings:
-- The **AR(1)** model performs best, confirmed by both OLS and ARIMA estimation.  
-- The **AIC** criterion identifies **ARMA(1,0)** as the best model, while **BIC** suggests **ARMA(0,0)**.  
-- Diagnostic tests (Ljung–Box and Bartlett) indicate that **ARMA(1,0)** is well specified and statistically significant.  
+## 📈 Results
 
-> A complete set of results, including ACF/PACF plots and test outputs, is included in the report.
+### Performance Metrics
+| Model | AIC | BIC |
+|-------|-----|-----|
+| AR(2) | -2870.45 | -2852.36 |
+| ARMA(1,0) | **-2872.37** | **-2858.80** |
+
+### Key Findings
+- **Model Selection:** The AIC criterion identified ARMA(1,0) as the optimal model, while BIC favored ARMA(0,0)
+- **Diagnostic Validation:** Ljung-Box and Bartlett tests demonstrated that the ARMA(1,0) model was well-specified
+- **OLS Significance:** OLS estimation confirmed the statistical significance of the AR(1) autoregressive coefficient
 
 ---
 
-## 🧠 References
-For theoretical background:
+## 📚 References
 - Hyndman & Athanasopoulos, *Forecasting: Principles and Practice*  
 - Hamilton, *Time Series Analysis*  
 - Wooldridge, *Introductory Econometrics: A Modern Approach*  
-- Sévi, B. (2024). *Support de Cours M1 ECAP – Séries temporelles univariées*  
+- Sévi, B. (2024). *Support de cours – Séries temporelles univariées (M1 ECAP)*  
 
 ---
 
 ## 📜 License
-This project is released under the **MIT License**.  
+This project is released under the MIT License.  
 © 2025 Arthur Ernoult de La Provôté and Florian Crochet 
 
 ---
@@ -117,5 +124,5 @@ This project is released under the **MIT License**.
 
 ---
 
-## 💬 Acknowledgments
-Thanks to **Benoît Sévi** for course supervision and guidance, and to the R open-source community for providing robust econometric tools.
+## 🤝 Acknowledgments
+This work was conducted as part of the Univariate Time Series course, supervised by Benoît Sévi.
