@@ -6,12 +6,13 @@
 ---
 
 ## 🎯 Overview
+The ultimate goal of this project is to formally analyze the theoretical properties and empirical consequences of stochastic trend non-stationarity in economic data.
+
 **Objectives**
-- Understand the difference between deterministic and stochastic trends
-- Illustrate permanent vs. transitory shocks in AR(1) processes
-- Detect spurious regressions in non-stationary data
+- Illustrate permanent versus transitory shocks in deterministic and stochastic trends
+- Detect spurious regressions in non-stationary data via large-scale simulations
 - Estimate and interpret Dickey-Fuller and KPSS tests
-- Apply the methodology to real economic data
+- Apply unit root testing methodologies to empirical macroeconomic data
 
 ---
 
@@ -32,7 +33,7 @@
 
 ## ⚙️ Features
 - **Simulate Processes:** Simulate AR(1) processes with and without unit roots
-- **Compare Trends:** Visually compare deterministic (TS) vs. stochastic (DS) trends
+- **Compare Trends:** Compare deterministic (TS) vs. stochastic (DS) trends visually
 - **Estimate Values:** Compute critical values for the Dickey-Fuller test via Monte Carlo estimation
 - **Analyze Empirically:** Conduct empirical analysis of the U.S. GDP series (1990–2023)
 - **Identify Spuriousness:** Detect spurious regressions through large-scale simulations
@@ -41,8 +42,8 @@
 
 ## 🧰 Tech Stack
 - **Language:** R
-- **Data Management & I/O:** tidyverse, openxlsx
-- **Econometrics & Time Series:** urca, forecast, tseries
+- **Numerical Computing & Data Manipulation:** tidyverse, openxlsx
+- **Time Series Analysis:** urca, forecast, tseries
 
 ---
 
@@ -62,8 +63,6 @@ Rscript -e 'install.packages(c("tidyverse", "openxlsx", "urca", "forecast", "tse
 ### Reproducing the Analysis / Execution Pipeline
 ```r
 rmarkdown::render("unit_roots_project.qmd", output_format = "pdf")
-
-simulate_ar1(phi = 0.9, choc_value = 20, choc_time = 100, n = 200)
 ```
 
 ---
@@ -83,20 +82,23 @@ nonstationarity_and_unit_roots/
 
 ## 📈 Results
 
+### Performance Metrics
+*(No explicit predictive performance metrics are formulated for this exploratory simulation analysis).*
+
 ### Key Findings
-- **Transitory Shocks:** For ϕ < 1, shocks are transitory and the process returns to its mean
-- **Permanent Shocks:** For ϕ = 1, shocks have permanent effects, confirming a random walk behavior
-- **Spurious Regression:** Tests show rejection rates far above 5% (≈83-88%), highlighting false correlations
-- **Monte Carlo Precision:** The simulation of Dickey-Fuller statistics accurately reproduces theoretical critical values
-- **Empirical Stationarity:** The U.S. GDP (1990-2023) exhibits a non-stationary trend, with unit root confirmed by Dickey-Fuller and contradicted by KPSS tests
+- **Transitory Shocks:** For ϕ < 1, shocks are transitory and the process returns to its mean.
+- **Permanent Shocks:** For ϕ = 1, shocks have permanent effects, confirming a random walk behavior.
+- **Spurious Regression:** Tests show rejection rates far above 5% (≈83-88%), highlighting false correlations.
+- **Monte Carlo Precision:** The simulation of Dickey-Fuller statistics accurately reproduces theoretical critical values.
+- **Empirical Stationarity:** The U.S. GDP (1990-2023) exhibits a non-stationary trend, with unit root confirmed by Dickey-Fuller and contradicted by KPSS tests.
 
 ---
 
 ## 📚 References
-- Hyndman & Athanasopoulos, *Forecasting: Principles and Practice*  
 - Hamilton, *Time Series Analysis*  
-- Wooldridge, *Introductory Econometrics: A Modern Approach*  
+- Hyndman & Athanasopoulos, *Forecasting: Principles and Practice*  
 - Sévi, B. (2024). *Support de cours – Séries temporelles univariées (M1 ECAP)*
+- Wooldridge, *Introductory Econometrics: A Modern Approach*  
 
 ---
 

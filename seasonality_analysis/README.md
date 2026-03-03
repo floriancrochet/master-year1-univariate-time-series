@@ -6,6 +6,8 @@
 ---
 
 ## 🎯 Overview
+The ultimate goal of this project is to model complex seasonal dynamics in economic series using advanced seasonal forecasting architectures.
+
 **Objectives**
 - Simulate and analyze seasonal ARMA models with different periodicities
 - Fit SARIMA models and evaluate residual diagnostics
@@ -41,8 +43,8 @@
 
 ## 🧰 Tech Stack
 - **Language:** R
-- **Data Management & I/O:** tidyverse
-- **Econometrics & Time Series:** astsa, forecast
+- **Numerical Computing & Data Manipulation:** tidyverse
+- **Time Series Analysis:** astsa, forecast
 
 ---
 
@@ -61,25 +63,7 @@ Rscript -e 'install.packages(c("astsa", "forecast", "tidyverse"))'
 
 ### Reproducing the Analysis / Execution Pipeline
 ```r
-library(astsa)
-library(forecast)
-library(tidyverse)
-
-set.seed(123)
-sarma1 <- sarima.sim(
-  ar = c(0.4),
-  ma = c(0.3, 0.3),
-  sar = c(0.4),
-  sma = c(0.3),
-  S = 4,
-  n = 500
-)
-
-mod <- Arima(sarma1, order = c(1,0,2), seasonal = list(order = c(1,0,1), period = 4))
-
-Acf(residuals(mod))
-Pacf(residuals(mod))
-Box.test(residuals(mod), lag = 20, type = "Ljung-Box")
+rmarkdown::render("seasonality_project.qmd", output_format = "pdf")
 ```
 
 ---
@@ -107,19 +91,19 @@ seasonality_analysis/
 | Simulated Data | SARMA(1,2)(1,1)[4] | Residual Diagnostics |
 
 ### Key Findings
-- **Simulations:** SARMA(1,2)(1,1)[4], SARMA(1,1)(1,1)[6], and SARMA(2,0)(0,1)[12] were simulated successfully
-- **Equivalent Forms:** Equivalent non-seasonal ARMA forms were derived, demonstrating theoretical equivalence
-- **Residual Behavior:** Residual diagnostics confirmed white-noise behavior in all final models
-- **Gas Seasonality:** French gas consumption exhibited strong annual seasonality with no trend
-- **Airport Trend:** Toulouse airport traffic showed a trend break in 2001 due to external shocks (9/11), requiring separated modeling
+- **Simulations:** SARMA(1,2)(1,1)[4], SARMA(1,1)(1,1)[6], and SARMA(2,0)(0,1)[12] were simulated successfully.
+- **Equivalent Forms:** Equivalent non-seasonal ARMA forms were derived, demonstrating theoretical equivalence.
+- **Residual Behavior:** Residual diagnostics confirmed white-noise behavior in all final models.
+- **Gas Seasonality:** French gas consumption exhibited strong annual seasonality with no trend.
+- **Airport Trend:** Toulouse airport traffic showed a trend break in 2001 due to external shocks (9/11), requiring separated modeling.
 
 ---
 
 ## 📚 References
-- Hyndman & Athanasopoulos, *Forecasting: Principles and Practice*  
 - Hamilton, *Time Series Analysis*  
-- Wooldridge, *Introductory Econometrics: A Modern Approach*  
+- Hyndman & Athanasopoulos, *Forecasting: Principles and Practice*  
 - Sévi, B. (2024). *Support de cours – Séries temporelles univariées (M1 ECAP)*
+- Wooldridge, *Introductory Econometrics: A Modern Approach*  
 
 ---
 

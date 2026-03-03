@@ -6,6 +6,8 @@
 ---
 
 ## 🎯 Overview
+The ultimate goal of this project is to rigorously evaluate the predictive accuracy of autoregressive models against random walk benchmarks for financial futures.
+
 **Objectives**
 - Model financial returns using autoregressive (AR) processes
 - Generate and compare 1-day and 5-day forecasts using rolling estimation windows
@@ -39,9 +41,9 @@
 
 ## 🧰 Tech Stack
 - **Language:** R
-- **Data Management & I/O:** tidyverse, readxl
-- **Econometrics & Time Series:** tseries, forecast
-- **Statistical Inference & Diagnostics:** lmtest, sandwich
+- **Numerical Computing & Data Manipulation:** tidyverse, readxl
+- **Time Series Analysis:** tseries, forecast
+- **Econometrics & Statistical Inference:** lmtest, sandwich
 - **Data Visualization:** gridExtra
 
 ---
@@ -61,12 +63,7 @@ Rscript -e 'install.packages(c("tidyverse", "readxl", "tseries", "forecast", "lm
 
 ### Reproducing the Analysis / Execution Pipeline
 ```r
-library(forecast)
-rend_ble <- read_excel("data/wheat_futures_returns_2006_2022.xlsx")
-rend_ble_ts <- ts(rend_ble$return, start = c(2006, 1, 2), frequency = 252)
-
-modele_ar1 <- Arima(rend_ble_ts, order = c(1, 0, 0))
-forecast(modele_ar1, h = 5)
+rmarkdown::render("forecast_evaluation_project.qmd", output_format = "pdf")
 ```
 
 ---
@@ -94,18 +91,18 @@ forecast_model_evaluation/
 | A3_5 | Outperforms Random Walk | Unbiased |
 
 ### Key Findings
-- **Stationarity:** The ADF test confirms the stationarity of the return series
-- **Model Selection:** The AR(1) model was selected based on ACF and PACF analysis
-- **Forecast Unbiasedness:** Mincer-Zarnowitz test results show that A10_1, A3_1, and A3_5 forecasts are unbiased
-- **Predictive Superiority:** Diebold-Mariano test results demonstrate that the AR(1) models consistently outperform the random walk benchmark, with A3_1 slightly outperforming A10_1
+- **Stationarity:** The ADF test confirms the stationarity of the return series.
+- **Model Selection:** The AR(1) model was selected based on ACF and PACF analysis.
+- **Forecast Unbiasedness:** Mincer-Zarnowitz test results show that A10_1, A3_1, and A3_5 forecasts are unbiased.
+- **Predictive Superiority:** Diebold-Mariano test results demonstrate that the AR(1) models consistently outperform the random walk benchmark, with A3_1 slightly outperforming A10_1.
 
 ---
 
 ## 📚 References
-- Hyndman & Athanasopoulos, *Forecasting: Principles and Practice*  
 - Hamilton, *Time Series Analysis*  
-- Wooldridge, *Introductory Econometrics: A Modern Approach*  
+- Hyndman & Athanasopoulos, *Forecasting: Principles and Practice*  
 - Sévi, B. (2024). *Support de cours – Séries temporelles univariées (M1 ECAP)*
+- Wooldridge, *Introductory Econometrics: A Modern Approach*  
 
 ---
 

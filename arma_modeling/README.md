@@ -1,11 +1,13 @@
 # ARMA Modeling  
-*Analyze and forecast financial time series using autoregressive and moving average models*
+*Analyze and forecast financial time series using autoregressive and moving average models.*
 
 [**ARMA Modeling Report**](https://drive.google.com/file/d/1f8RKfl2IlKWku6SDho6zXx6anQDJXRU7/view?usp=drive_link)
 
 ---
 
 ## 🎯 Overview
+The ultimate goal of this project is to model financial return dynamics by identifying the optimal autoregressive moving average specification.
+
 **Objectives**
 - Estimate autoregressive models via OLS and maximum likelihood
 - Compare model performance systematically using AIC and BIC
@@ -40,9 +42,9 @@
 
 ## 🧰 Tech Stack
 - **Language:** R
-- **Data Management & I/O:** tidyverse
-- **Econometrics & Time Series:** forecast
-- **Statistical Inference & Diagnostics:** lmtest
+- **Numerical Computing & Data Manipulation:** tidyverse
+- **Time Series Analysis:** forecast
+- **Econometrics & Statistical Inference:** lmtest
 - **Data Visualization:** ggplot2
 
 ---
@@ -62,12 +64,7 @@ Rscript -e 'install.packages(c("tidyverse", "forecast"))'
 
 ### Reproducing the Analysis / Execution Pipeline
 ```r
-library(tidyverse)
-library(forecast)
-
-CAC40 <- read_csv2("data/CAC40_2010_2023.csv")
-lm_modele_ar1 <- lm(Rendement_t ~ Rendement_t_1, data = CAC40)
-arma_1_0 <- Arima(CAC40$Rendement_t, order = c(1, 0, 0))
+rmarkdown::render("arma_modeling_project.qmd", output_format = "pdf")
 ```
 
 ---
@@ -94,17 +91,17 @@ arma_modeling/
 | ARMA(1,0) | **-2872.37** | **-2858.80** |
 
 ### Key Findings
-- **Model Selection:** The AIC criterion identified ARMA(1,0) as the optimal model, while BIC favored ARMA(0,0)
-- **Diagnostic Validation:** Ljung-Box and Bartlett tests demonstrated that the ARMA(1,0) model was well-specified
-- **OLS Significance:** OLS estimation confirmed the statistical significance of the AR(1) autoregressive coefficient
+- **Model Selection:** The AIC criterion identified ARMA(1,0) as the optimal model, while BIC favored ARMA(0,0).
+- **Diagnostic Validation:** Ljung-Box and Bartlett tests demonstrated that the ARMA(1,0) model was well-specified.
+- **OLS Significance:** OLS estimation confirmed the statistical significance of the AR(1) autoregressive coefficient.
 
 ---
 
 ## 📚 References
-- Hyndman & Athanasopoulos, *Forecasting: Principles and Practice*  
 - Hamilton, *Time Series Analysis*  
-- Wooldridge, *Introductory Econometrics: A Modern Approach*  
+- Hyndman & Athanasopoulos, *Forecasting: Principles and Practice*  
 - Sévi, B. (2024). *Support de cours – Séries temporelles univariées (M1 ECAP)*  
+- Wooldridge, *Introductory Econometrics: A Modern Approach*  
 
 ---
 

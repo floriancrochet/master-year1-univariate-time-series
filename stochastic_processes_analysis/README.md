@@ -6,6 +6,8 @@
 ---
 
 ## 🎯 Overview
+The ultimate goal of this project is to systematically explore the theoretical stationarity boundaries and autocorrelation structures of simulated stochastic processes.
+
 **Objectives**
 - Express ARMA processes using the lag operator L and determine their characteristic equations
 - Assess weak stationarity conditions for each process
@@ -15,7 +17,6 @@
 ---
 
 ## 🗄️ Data
-- **Source:** N/A (Simulated data)
 - **Target Variable:** Simulated AR, MA, and ARMA processes
 - **Data Availability:** Generated in-script via `rnorm()`
 
@@ -39,9 +40,9 @@
 
 ## 🧰 Tech Stack
 - **Language:** R
-- **Data Management & I/O:** purrr
-- **Econometrics & Time Series:** tseries, forecast, FinTS, TSA
-- **Performance Evaluation & Metrics:** Metrics
+- **Numerical Computing & Data Manipulation:** purrr
+- **Time Series Analysis:** tseries, forecast, FinTS, TSA
+- **Econometrics & Statistical Inference:** Metrics
 - **Data Visualization:** ggplot2
 
 ---
@@ -61,19 +62,7 @@ Rscript -e 'install.packages(c("tseries", "forecast", "FinTS", "Metrics", "TSA",
 
 ### Reproducing the Analysis / Execution Pipeline
 ```r
-set.seed(983)
-T <- 1000
-epsilon <- rnorm(T)
-Y <- ts(numeric(T))
-Phi <- 0.65
-
-for (t in 2:T) {
-  Y[t] <- Phi * Y[t - 1] + epsilon[t]
-}
-
-autoplot(Y)
-ggAcf(Y)
-ggPacf(Y)
+rmarkdown::render("stochastic_processes_project.qmd", output_format = "pdf")
 ```
 
 ---
@@ -92,20 +81,23 @@ stochastic_processes_analysis/
 
 ## 📈 Results
 
+### Performance Metrics
+*(This project focuses on theoretical simulations and properties; no predictive performance metrics are evaluated).*
+
 ### Key Findings
-- **Verified Stationarity:** Stationarity verified through polynomial roots for MA(1), MA(2), AR(1), AR(2), ARMA(1,1), ARMA(3,2)
-- **Confirmed Expectations:** ACF and PACF shapes confirm theoretical expectations for all simulated processes
-- **AR Patterns:** AR processes exhibit an exponentially decaying ACF
-- **MA Patterns:** MA processes exhibit an ACF that cuts off after lag q
-- **ARMA Patterns:** ARMA processes exhibit mixed exponential patterns in their ACF and PACF
+- **Verified Stationarity:** Stationarity is verified through polynomial roots for MA(1), MA(2), AR(1), AR(2), ARMA(1,1), ARMA(3,2).
+- **Confirmed Expectations:** ACF and PACF shapes confirm theoretical expectations for all simulated processes.
+- **AR Patterns:** AR processes exhibit an exponentially decaying ACF.
+- **MA Patterns:** MA processes exhibit an ACF that cuts off after lag q.
+- **ARMA Patterns:** ARMA processes exhibit mixed exponential patterns in their ACF and PACF.
 
 ---
 
 ## 📚 References
-- Hyndman & Athanasopoulos, *Forecasting: Principles and Practice*  
 - Hamilton, *Time Series Analysis*  
-- Wooldridge, *Introductory Econometrics: A Modern Approach*  
+- Hyndman & Athanasopoulos, *Forecasting: Principles and Practice*  
 - Sévi, B. (2024). *Support de cours – Séries temporelles univariées (M1 ECAP)*
+- Wooldridge, *Introductory Econometrics: A Modern Approach*  
 
 ---
 
