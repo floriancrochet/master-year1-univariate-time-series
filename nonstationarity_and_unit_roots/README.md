@@ -41,8 +41,8 @@
 
 ## 🧰 Tech Stack
 - **Language:** R
-- **Data Manipulation:** tidyverse, openxlsx
-- **Modeling / ML:** urca, forecast, tseries
+- **Data Management & I/O:** tidyverse, openxlsx
+- **Econometrics & Time Series:** urca, forecast, tseries
 
 ---
 

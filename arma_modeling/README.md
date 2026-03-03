@@ -40,9 +40,10 @@
 
 ## 🧰 Tech Stack
 - **Language:** R
-- **Data Manipulation:** tidyverse
-- **Modeling / ML:** forecast
-- **Visualization:** ggplot2
+- **Data Management & I/O:** tidyverse
+- **Econometrics & Time Series:** forecast
+- **Statistical Inference & Diagnostics:** lmtest
+- **Data Visualization:** ggplot2
 
 ---
 

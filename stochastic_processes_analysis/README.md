@@ -39,9 +39,10 @@
 
 ## 🧰 Tech Stack
 - **Language:** R
-- **Data Manipulation:** purrr
-- **Modeling / ML:** tseries, forecast, FinTS, Metrics, TSA
-- **Visualization:** ggplot2
+- **Data Management & I/O:** purrr
+- **Econometrics & Time Series:** tseries, forecast, FinTS, TSA
+- **Performance Evaluation & Metrics:** Metrics
+- **Data Visualization:** ggplot2
 
 ---
 

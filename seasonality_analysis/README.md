@@ -41,8 +41,8 @@
 
 ## 🧰 Tech Stack
 - **Language:** R
-- **Data Manipulation:** tidyverse
-- **Modeling / ML:** astsa, forecast
+- **Data Management & I/O:** tidyverse
+- **Econometrics & Time Series:** astsa, forecast
 
 ---
 

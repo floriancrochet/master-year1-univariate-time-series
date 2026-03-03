@@ -39,9 +39,10 @@
 
 ## 🧰 Tech Stack
 - **Language:** R
-- **Data Manipulation:** tidyverse, readxl
-- **Modeling / ML:** tseries, forecast, lmtest, sandwich
-- **Visualization:** gridExtra
+- **Data Management & I/O:** tidyverse, readxl
+- **Econometrics & Time Series:** tseries, forecast
+- **Statistical Inference & Diagnostics:** lmtest, sandwich
+- **Data Visualization:** gridExtra
 
 ---
 

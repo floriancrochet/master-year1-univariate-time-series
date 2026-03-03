@@ -48,9 +48,11 @@
 
 ## 🧰 Tech Stack
 - **Language:** R
-- **Data Manipulation:** tidyverse, openxlsx, readxl, purrr
-- **Modeling / ML:** forecast, tseries, urca, astsa, FinTS, Metrics, TSA, lmtest, sandwich
-- **Visualization:** ggplot2, gridExtra
+- **Data Management & I/O:** tidyverse, openxlsx, readxl, purrr
+- **Econometrics & Time Series:** forecast, tseries, urca, astsa, FinTS, TSA
+- **Statistical Inference & Diagnostics:** lmtest, sandwich
+- **Performance Evaluation & Metrics:** Metrics
+- **Data Visualization:** ggplot2, gridExtra
 
 ---
 
