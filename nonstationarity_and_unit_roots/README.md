@@ -72,10 +72,12 @@ rmarkdown::render("unit_roots_project.qmd", output_format = "pdf")
 ```text
 nonstationarity_and_unit_roots/
 │
-├── data/                    # U.S. GDP dataset (1990–2023)
-├── report/                  # Rendered analysis report
-├── unit_roots_project.qmd   # Main source code
-└── README.md
+├── data/
+│   └── GDP_US_1990_2023.RData
+├── report/
+│   └── unit_roots_analysis_report.pdf
+├── README.md
+└── unit_roots_project.qmd
 ```
 
 ---

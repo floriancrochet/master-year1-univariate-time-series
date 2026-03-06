@@ -85,12 +85,15 @@ rmarkdown::render("stochastic_processes_analysis/stochastic_processes_project.qm
 ```text
 master-year1-univariate-time-series/
 │
-├── arma_modeling/                     # ARMA modeling of CAC40 returns
-├── forecast_model_evaluation/         # Rolling forecasts for wheat futures
-├── nonstationarity_and_unit_roots/    # Unit root analysis and simulated trends
-├── seasonality_analysis/              # SARIMA modeling for gas consumption
-├── stochastic_processes_analysis/     # Analytical study of ARMA processes
-└── README.md
+├── arma_modeling/                              # ARMA modeling of CAC40 returns
+├── forecast_model_evaluation/                  # Rolling forecasts for wheat futures
+├── nonstationarity_and_unit_roots/             # Unit root analysis and simulated trends
+├── seasonality_analysis/                       # SARIMA modeling for gas consumption
+├── stochastic_processes_analysis/              # Analytical study of ARMA processes
+├── .gitignore
+├── LICENSE
+├── README.md
+└── master-year1-univariate-time-series.Rproj
 ```
 
 ---

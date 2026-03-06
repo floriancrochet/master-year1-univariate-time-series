@@ -72,9 +72,10 @@ rmarkdown::render("stochastic_processes_project.qmd", output_format = "pdf")
 ```text
 stochastic_processes_analysis/
 │
-├── report/                           # Rendered analysis report
-├── stochastic_processes_project.qmd  # Main source code
-└── README.md
+├── report/
+│   └── stochastic_processes_report.pdf
+├── README.md
+└── stochastic_processes_project.qmd
 ```
 
 ---

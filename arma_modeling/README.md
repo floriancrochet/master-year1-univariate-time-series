@@ -74,10 +74,12 @@ rmarkdown::render("arma_modeling_project.qmd", output_format = "pdf")
 ```text
 arma_modeling/
 │
-├── data/                      # Raw CAC40 dataset
-├── report/                    # Compiled analysis report
-├── arma_modeling_project.qmd  # Source code for ARMA modeling
-└── README.md
+├── data/
+│   └── CAC40_2010_2023.csv
+├── report/
+│   └── arma_modeling_report.pdf
+├── README.md
+└── arma_modeling_project.qmd
 ```
 
 ---

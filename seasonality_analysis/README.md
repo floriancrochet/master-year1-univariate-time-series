@@ -73,10 +73,13 @@ rmarkdown::render("seasonality_project.qmd", output_format = "pdf")
 ```text
 seasonality_analysis/
 │
-├── data/                    # Gas consumption and airport traffic datasets
-├── report/                  # Rendered analysis report
-├── seasonality_project.qmd  # Main source code
-└── README.md
+├── data/
+│   ├── fr_gas_consumption_monthly.RData
+│   └── tls_monthly_passengers.rda
+├── report/
+│   └── seasonality_modeling_report.pdf
+├── README.md
+└── seasonality_project.qmd
 ```
 
 ---

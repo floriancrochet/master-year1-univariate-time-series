@@ -73,10 +73,12 @@ rmarkdown::render("forecast_evaluation_project.qmd", output_format = "pdf")
 ```text
 forecast_model_evaluation/
 │
-├── data/                             # Wheat futures data (2006–2022)
-├── report/                           # Compiled analysis report
-├── forecast_evaluation_project.qmd   # Main source code for forecast evaluation
-└── README.md
+├── data/
+│   └── wheat_futures_returns_2006_2022.xlsx
+├── report/
+│   └── forecast_evaluation_report.pdf
+├── README.md
+└── forecast_evaluation_project.qmd
 ```
 
 ---
